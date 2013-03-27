@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <integer name="player_touch_radius">65</integer>
+    <integer name="player_starting_level">2</integer>
+    <integer name="num_levels">6</integer>
+    <integer name="win_level">6</integer>
+    
+    <integer name="level_1_mass">1</integer>
+    <integer name="level_2_mass">5</integer>
+    <integer name="level_3_mass">10</integer>
+    <integer name="level_4_mass">35</integer>
+    <integer name="level_5_mass">210</integer>
+    <integer name="level_6_mass">1260</integer>
+    
+    <integer name="level_1_radius">10</integer>
+    <integer name="level_2_radius">20</integer>
+    <integer name="level_3_radius">30</integer>
+    <integer name="level_4_radius">40</integer>
+    <integer name="level_5_radius">50</integer>
+    <integer name="level_6_radius">60</integer>
+</resources>
