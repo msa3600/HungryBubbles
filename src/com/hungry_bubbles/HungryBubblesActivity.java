@@ -7,7 +7,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 public class HungryBubblesActivity extends Activity {
-	private AppManager appManager;
+	private AppInfo appManager;
 	private GameView gameView;	
 
 	@Override
@@ -19,8 +19,8 @@ public class HungryBubblesActivity extends Activity {
             WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.game_screen);
         
-        appManager = (AppManager) getApplication();
-        gameView = new GameView(this, appManager.getStartingPlayer());
+        appManager = (AppInfo) getApplication();
+        gameView = new GameView(this);
         LinearLayout layout = (LinearLayout) findViewById(R.id.main_layout);  
         layout.addView(gameView);        
     }

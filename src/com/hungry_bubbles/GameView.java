@@ -22,10 +22,10 @@ public class GameView extends View
 	private int width, height;
 	private float playerX, playerY;
 	
-	public GameView(Context context, BubbleData playerPiece) {
+	public GameView(Context context) {
 		super(context);
 		
-		player = playerPiece;
+		player = null;
 		opponents = new ArrayList<BubbleData>();
 	}
 
@@ -42,7 +42,9 @@ public class GameView extends View
 			width = c.getWidth();
 			height = c.getHeight();
 			playerX = width / 2;
-			playerY = height / 2;		
+			playerY = height / 2;
+			
+			player = new BubbleData(Color.BLACK, playerX, playerY, playerRadius);
 			drawPlayer(c);
 			initialized = true;
 		}
