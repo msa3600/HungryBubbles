@@ -1,10 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
     android:background="#FFC80F" >
     
-    <Button android:id="@+id/start_game_button"/>    
+    <TextView 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="8pt"
+        android:background="#000000"
+        android:textColor="#FFC80F" 
+        android:gravity="center"
+        android:text="Hungry Bubbles"
+        android:textSize="16pt" />
+    
+    <LinearLayout 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true" >
+        
+	    <Button 
+	        android:id="@+id/start_game_button"
+            android:background="#000000"
+            android:textColor="#FFC80F"
+	        android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+	        android:text="Start Game"
+	        android:padding="5pt"
+	        android:layout_marginBottom="10pt"
+            android:gravity="center" />    
+	    
+	    <Button 
+	        android:id="@+id/game_settings_button"
+            android:background="#000000"
+            android:textColor="#FFC80F"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+	        android:text="Settings"
+            android:padding="5pt"
+            android:layout_marginBottom="10pt"
+            android:gravity="center" />    
+	    
+	    <Button 
+	        android:id="@+id/quit_game_button"
+            android:background="#000000"
+            android:textColor="#FFC80F"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+	        android:text="Quit"
+            android:padding="5pt"
+            android:gravity="center" />    
 
-</LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
