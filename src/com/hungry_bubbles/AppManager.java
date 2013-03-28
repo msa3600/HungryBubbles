@@ -13,7 +13,7 @@ public class AppManager extends Application
 	private Map<Integer, Color> levelColors;
 	private Map<Integer, Integer> levelMasses;
 	private Map<Integer, Integer> levelRadii;
-	private GamePiece startingPlayerPiece;
+	private BubbleData startingPlayerPiece;
 	private int winLevel, numLevels, playerTouchRadius, playerStartingLevel;	
 	
 	@Override
@@ -77,7 +77,7 @@ public class AppManager extends Application
 		return playerStartingLevel;
 	}
 	
-	public GamePiece getStartingPlayer()
+	public BubbleData getStartingPlayer()
 	{
 		return startingPlayerPiece;
 	}	
@@ -87,9 +87,14 @@ public class AppManager extends Application
 		
 	}		
 	
-	public static boolean intersecting(GamePiece piece1, GamePiece piece2)
+	public static boolean intersecting(BubbleData piece1, BubbleData piece2)
 	{
 		// TODO: return piece1.contains(piece2);
 		return false;
+	}
+
+	public int getWinRadius() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

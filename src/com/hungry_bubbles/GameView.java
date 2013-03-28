@@ -12,8 +12,8 @@ import android.view.View;
 
 public class GameView extends View 
 {
-	private GamePiece player;
-	private List<GamePiece> opponents;
+	private BubbleData player;
+	private List<BubbleData> opponents;
 	
 	// TODO: Use GamePiece fields instead
 	private static final int PLAYER_RADIUS = 50;
@@ -22,11 +22,11 @@ public class GameView extends View
 	private int width, height;
 	private float playerX, playerY;
 	
-	public GameView(Context context, GamePiece playerPiece) {
+	public GameView(Context context, BubbleData playerPiece) {
 		super(context);
 		
 		player = playerPiece;
-		opponents = new ArrayList<GamePiece>();
+		opponents = new ArrayList<BubbleData>();
 	}
 
 	@Override
@@ -75,6 +75,17 @@ public class GameView extends View
 		return false;
 	}
 	
+	/**
+	 * Determines whether or not the {@link MotionEvent} which resulted from a
+	 * user touch action is valid (i.e. is contained within the player's 
+	 * "bubble").
+	 * 
+	 * @param 	e	The {@link MotionEvent} caused by the player touching the 
+	 * 				screen.
+	 * 
+	 * @return	{@code true} if the player touched within their "bubble" and 
+	 * {@code false} otherwise.	
+	 */
 	private boolean validPlayerTouch(MotionEvent e)
 	{
 		float eventX = e.getX();
