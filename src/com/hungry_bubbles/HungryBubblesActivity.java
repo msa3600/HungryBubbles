@@ -21,8 +21,8 @@ public class HungryBubblesActivity extends Activity {
         
         gameBoard = new GameBoard();
         gameView = new GameView(this, gameBoard);
+        
         LinearLayout layout = (LinearLayout) findViewById(R.id.main_layout);  
         layout.addView(gameView);    
-        
     }
 }

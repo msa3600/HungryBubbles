@@ -48,10 +48,9 @@ public class GameBoard implements GameRenderer
 			boardHeight = screenHeight + (2 * AppInfo.MAX_RADIUS);
 			
 			playerData = new BubbleData(Color.BLACK, screenWidth / 2, screenHeight / 2, AppInfo.PLAYER_STARTING_RADIUS);
-			drawPlayer(canvas);
 			initialized = true;
 		}
-		
+
 		drawPlayer(canvas);
     }
 	
@@ -117,11 +116,11 @@ public class GameBoard implements GameRenderer
 		return false;
 	}
 	
-	private void drawPlayer(Canvas c)
+	private void drawPlayer(Canvas canvas)
 	{
 		Paint circlePaint = new Paint();
 		circlePaint.setColor(playerData.getColor());
-		c.drawCircle(playerData.getX(), playerData.getY(), playerData.getRadius(), circlePaint);
+		canvas.drawCircle(playerData.getX(), playerData.getY(), playerData.getRadius(), circlePaint);
 	}
 
 	@Override
@@ -137,8 +136,12 @@ public class GameBoard implements GameRenderer
 		{
 			return false;
 		}
-		
+
 		playerData = BubbleData.updatePosition(playerData, e.getX(), e.getY());
+
+		// Causes the game view to be redrawn
+		view.invalidate();
+		
 		return true;
     }
 }

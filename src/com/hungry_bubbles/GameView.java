@@ -13,6 +13,7 @@ public class GameView extends View
 		super(context);
 		
 		this.renderer = renderer;
+		renderer.registerView(this);
 	}
 
 	@Override
