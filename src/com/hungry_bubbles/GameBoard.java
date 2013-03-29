@@ -14,43 +14,40 @@ import android.view.MotionEvent;
 public class GameBoard implements GameRenderer
 {
 	private GameView view;
-	private BubbleData player;
+	private BubbleData playerData;
 	private List<BubbleData> opponents;
-	
-	// TODO: Define this value as a public constant in AppInfo instead
-	private static final int PLAYER_RADIUS = 50;
-	
-	// TODO: Use BubbleData fields instead
-	private int playerRadius;
-	private boolean initialized = false;
-	private int width, height;
-	private float playerX, playerY;
+	private int screenWidth, screenHeight, boardWidth, boardHeight;
+	private boolean initialized;
 	
 	public GameBoard()
 	{
 		// TODO: Add safety checks to ensure nothing happens until a view is registered
 		this.view = null;
-		player = null;
+		playerData = null;
 		opponents = new ArrayList<BubbleData>();
+		initialized = false;
 	}
 
 	@Override
     public void renderGame(Canvas canvas)
     {
-	    // TODO Auto-generated method stub
-
-		
 		if(!initialized)
 		{
-			// TODO: Initialize playerRadius properly
-			playerRadius = PLAYER_RADIUS;
+			// Stores the size of the physical screen. This value only needs
+			// to be retrieved once since this activity is locked in horizontal
+			// orientation
+			screenWidth = canvas.getWidth();
+			screenHeight = canvas.getHeight();
 			
-			width = canvas.getWidth();
-			height = canvas.getHeight();
-			playerX = width / 2;
-			playerY = height / 2;
+			// The actual, effective size of the game board is 2 * MAX_RADIUS
+			// units larger than the physical screen in both directions. This
+			// additional area is used as a spawning area for new 
+			// computer-controlled bubbles so that bubbles will not spawn on 
+			// top of the player.
+			boardWidth = screenWidth + (2 * AppInfo.MAX_RADIUS); 
+			boardHeight = screenHeight + (2 * AppInfo.MAX_RADIUS);
 			
-			player = new BubbleData(Color.BLACK, playerX, playerY, playerRadius);
+			playerData = new BubbleData(Color.BLACK, screenWidth / 2, screenHeight / 2, AppInfo.PLAYER_STARTING_RADIUS);
 			drawPlayer(canvas);
 			initialized = true;
 		}
@@ -58,10 +55,34 @@ public class GameBoard implements GameRenderer
 		drawPlayer(canvas);
     }
 	
+	public int getScreenWidth()
+	{
+		return screenWidth;
+	}
+	
+	public int getScreenHeight()
+	{
+		return screenHeight;
+	}
+	
+	public int getBoardWidth()
+	{
+		return boardWidth;
+	}
+	
+	public int getBoardHeight()
+	{
+		return boardHeight;
+	}
+	
+	/**
+	 * Used to determine whether or not the point with the given x and y
+	 * coordinates is located on the physical screen.
+	 */
 	private boolean outOfBounds(float x, float y, float radius)
 	{
-		if((x + radius < 0) || (x - radius < 0) || (x + radius > width) || (x - radius > width) ||
-		   (y + radius < 0) || (y - radius < 0) || (y + radius > height) || (y - radius > height))
+		if((x + radius < 0) || (x - radius < 0) || (x + radius > screenWidth) || (x - radius > screenWidth) ||
+		   (y + radius < 0) || (y - radius < 0) || (y + radius > screenHeight) || (y - radius > screenHeight))
 		{
 			return true;
 		}
@@ -80,13 +101,14 @@ public class GameBoard implements GameRenderer
 	 * @return	{@code true} if the player touched within their "bubble" and 
 	 * {@code false} otherwise.	
 	 */
-	@Override
-	public boolean isValidPlayerTouch(MotionEvent e)
+	private boolean isValidPlayerTouch(MotionEvent e)
 	{
 		float eventX = e.getX();
 		float eventY = e.getY();
+		int playerRadius = playerData.getRadius();
 		
-		if((Math.abs(playerX - eventX) <= PLAYER_RADIUS) && (Math.abs(playerY - eventY) <= PLAYER_RADIUS) &&
+		if((Math.abs(playerData.getX() - eventX) <= playerRadius) && 
+		   (Math.abs(playerData.getY() - eventY) <= playerRadius) &&
 		   !outOfBounds(eventX, eventY, playerRadius))
 		{
 			return true;
@@ -98,13 +120,25 @@ public class GameBoard implements GameRenderer
 	private void drawPlayer(Canvas c)
 	{
 		Paint circlePaint = new Paint();
-		circlePaint.setColor(Color.BLACK);
-		c.drawCircle(playerX, playerY, PLAYER_RADIUS, circlePaint);
+		circlePaint.setColor(playerData.getColor());
+		c.drawCircle(playerData.getX(), playerData.getY(), playerData.getRadius(), circlePaint);
 	}
 
 	@Override
     public void registerView(GameView view)
     {
 		this.view = view;   
+    }
+
+	@Override
+    public boolean handlePlayerTouch(MotionEvent e)
+    {
+		if(!isValidPlayerTouch(e))
+		{
+			return false;
+		}
+		
+		playerData = BubbleData.updatePosition(playerData, e.getX(), e.getY());
+		return true;
     }
 }

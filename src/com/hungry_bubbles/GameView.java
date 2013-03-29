@@ -25,6 +25,6 @@ public class GameView extends View
 	@Override
 	public boolean onTouchEvent(MotionEvent e)
 	{
-		return renderer.isValidPlayerTouch(e);
+		return renderer.handlePlayerTouch(e);
 	}
 }

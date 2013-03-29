@@ -14,5 +14,5 @@ public interface GameRenderer
 	// TODO: Add comments
 	public void registerView(GameView view);
 	public void renderGame(Canvas canvas);
-	public boolean isValidPlayerTouch(MotionEvent e);
+	public boolean handlePlayerTouch(MotionEvent e);
 }

@@ -77,4 +77,10 @@ public class BubbleData
 		return new BubbleData(bubble.getColor(), bubble.getX(), bubble.getY(), 
 			radius);
 	}
+
+	public static BubbleData updatePosition(BubbleData bubble, float x,
+            float y)
+    {
+		return new BubbleData(bubble.getColor(), x, y, bubble.getRadius());
+    }
 }
