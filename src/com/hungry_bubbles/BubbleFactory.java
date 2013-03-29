@@ -5,6 +5,11 @@ package com.hungry_bubbles;
  */
 public class BubbleFactory 
 {
+	public BubbleFactory() 
+	{
+		
+	}
+	
 	public void startNewBubble()
 	{
 		// TODO: Implement
