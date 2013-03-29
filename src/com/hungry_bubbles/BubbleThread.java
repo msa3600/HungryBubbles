@@ -1,7 +1,5 @@
 package com.hungry_bubbles;
 
-import android.graphics.Color;
-
 /**
  * Drives the movement and actions of the computer-controlled bubbles.
  *  
@@ -17,22 +15,27 @@ public class BubbleThread implements Runnable
 	 * @param bubbleData
 	 * @throws IllegalArgumentException
 	 */
-	public BubbleThread(AppManager appManager, Color pieceColor, float startX, 
+	public BubbleThread(GameBoard board, int color, float startX, 
 		float startY, int radius)
 		throws IllegalArgumentException
 	{
-		if(bubbleData == null)
+		throwIfNull("GameBoard board", board);
+		this.bubbleData = new BubbleData(color, startX, startY, radius);
+	}
+	
+	private void throwIfNull(String name, Object obj)
+		throws IllegalArgumentException
+	{
+		if(obj == null)
 		{
 			String className = this.getClass().getName();
 			throw new IllegalArgumentException("In " + className + ": " +
-				" construction argument 'bubbleData' cannot be null");
+				" construction argument '" + name + "' cannot be null");
 		}
-		
-		this.bubbleData = bubbleData;
 	}
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Runnable#run()
+
+	/**
+	 * TODO: Complete comment
 	 */
 	@Override
 	public void run() {

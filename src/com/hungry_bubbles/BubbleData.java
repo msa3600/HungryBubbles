@@ -11,11 +11,11 @@ import android.graphics.Color;
  */
 public class BubbleData
 {
-	private final Color color;
+	private final int color;
 	private final float x, y;
 	private final int radius;
 
-	public BubbleData(Color color, float x, float y, int radius)
+	public BubbleData(int color, float x, float y, int radius)
 	{
 		this.color = color;
 		this.x = x;
@@ -33,7 +33,7 @@ public class BubbleData
 		return y;
 	}
 
-	public Color getColor()
+	public int getColor()
 	{
 		return color;
 	}
@@ -45,7 +45,7 @@ public class BubbleData
 
 	public static BubbleData consume(BubbleData consumer, BubbleData victim)
 	{
-		// If the given GamePiece information indicates that the other bubble 
+		// If the given bubble information indicates that the other bubble 
 		// is larger than this one then the other piece will not be consumed.
 		if(consumer == null || victim == null || consumer.getRadius() < victim.getRadius())
 		{
@@ -54,16 +54,9 @@ public class BubbleData
 		
 		return new BubbleData(consumer.getColor(), consumer.getX(), 
 			consumer.getY(), (consumer.getRadius()+ victim.getRadius()));
-		
-		/* TODO: move to the caller
-		if(radius >= appManager.getWinRadius())
-		{
-			appManager.endGame(AppManager.GameState.WIN);
-		}
-		*/
 	}
 
-	public static BubbleData updateColor(BubbleData bubble, Color newColor)
+	public static BubbleData updateColor(BubbleData bubble, int newColor)
 	{
 		return new BubbleData(newColor, bubble.getX(), bubble.getY(), 
 			bubble.getRadius());
