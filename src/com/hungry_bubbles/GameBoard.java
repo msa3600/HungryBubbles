@@ -16,6 +16,7 @@ public class GameBoard implements GameRenderer
 	private GameView view;
 	private BubbleData playerData;
 	private List<BubbleData> opponents;
+	private BubbleFactory bubbleFactory;
 	private int screenWidth, screenHeight, boardWidth, boardHeight;
 	private boolean initialized;
 	
@@ -25,6 +26,7 @@ public class GameBoard implements GameRenderer
 		this.view = null;
 		playerData = null;
 		opponents = new ArrayList<BubbleData>();
+		bubbleFactory = new BubbleFactory();
 		initialized = false;
 	}
 
