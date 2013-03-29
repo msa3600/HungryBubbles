@@ -1,0 +1,18 @@
+package com.hungry_bubbles;
+
+import android.graphics.Canvas;
+import android.view.MotionEvent;
+
+/**
+ * Interface for a class which is capable of drawing the current visual state
+ * of the game on the provided {@link Canvas} object.
+ * 
+ * @author Timothy Heard
+ */
+public interface GameRenderer
+{
+	// TODO: Add comments
+	public void registerView(GameView view);
+	public void renderGame(Canvas canvas);
+	public boolean isValidPlayerTouch(MotionEvent e);
+}

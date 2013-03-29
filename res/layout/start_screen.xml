@@ -33,18 +33,18 @@
             android:gravity="center" />    
 	    
 	    <Button 
-	        android:id="@+id/game_settings_button"
+	        android:id="@+id/game_stats_button"
             android:background="#000000"
             android:textColor="#FFC80F"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-	        android:text="Settings"
+	        android:text="Game Stats"
             android:padding="5pt"
             android:layout_marginBottom="10pt"
             android:gravity="center" />    
 	    
 	    <Button 
-	        android:id="@+id/quit_game_button"
+	        android:id="@+id/quit_button"
             android:background="#000000"
             android:textColor="#FFC80F"
             android:layout_width="fill_parent"

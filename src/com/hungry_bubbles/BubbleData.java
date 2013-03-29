@@ -1,7 +1,5 @@
 package com.hungry_bubbles;
 
-import android.graphics.Color;
-
 /**
  * Thread-safe representation of a "bubble" in the game which uses immutable
  * state to allow for safe sharing of BubbleData object among different 

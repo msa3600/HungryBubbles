@@ -19,19 +19,8 @@ public class BubbleThread implements Runnable
 		float startY, int radius)
 		throws IllegalArgumentException
 	{
-		throwIfNull("GameBoard board", board);
+		GameUtils.throwIfNull("board", "GameBoard", board);
 		this.bubbleData = new BubbleData(color, startX, startY, radius);
-	}
-	
-	private void throwIfNull(String name, Object obj)
-		throws IllegalArgumentException
-	{
-		if(obj == null)
-		{
-			String className = this.getClass().getName();
-			throw new IllegalArgumentException("In " + className + ": " +
-				" construction argument '" + name + "' cannot be null");
-		}
 	}
 
 	/**
