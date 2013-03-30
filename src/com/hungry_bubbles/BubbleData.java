@@ -41,6 +41,15 @@ public class BubbleData
 		return radius;
 	}
 
+	public static boolean bubblesAreTouching(BubbleData bubble1, BubbleData bubble2)
+	{
+	    double a = bubble1.getRadius() + bubble2.getRadius();
+	    double dx = bubble1.getX() + bubble2.getX();
+	    double dy = bubble1.getY() + bubble2.getY();
+
+	    return a * a > (dx * dx + dy * dy);
+	}
+	
 	public static BubbleData consume(BubbleData consumer, BubbleData victim)
 	{
 		// If the given bubble information indicates that the other bubble 

@@ -19,10 +19,21 @@ public class HungryBubblesActivity extends Activity {
             WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.game_screen);
         
-        gameBoard = new GameBoard();
+        startGame();
+    }
+	
+	public void startGame()
+	{
+        gameBoard = GameBoard.makeGameBoard(this);
         gameView = new GameView(this, gameBoard);
         
         LinearLayout layout = (LinearLayout) findViewById(R.id.main_layout);  
-        layout.addView(gameView);    
-    }
+        layout.removeAllViews();
+        layout.addView(gameView);
+	}
+	
+	public void quit()
+	{
+		finish();
+	}
 }

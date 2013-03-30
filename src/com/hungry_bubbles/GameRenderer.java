@@ -11,7 +11,6 @@ import android.view.MotionEvent;
  */
 public interface GameRenderer
 {
-	// TODO: Add comments
 	public void registerView(GameView view);
 	public void renderGame(Canvas canvas);
 	public boolean handlePlayerTouch(MotionEvent e);
