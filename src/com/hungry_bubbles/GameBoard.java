@@ -253,6 +253,8 @@ public class GameBoard implements GameRenderer
 	 */
 	private void resolveConflicts()
     {
+		List<BubbleThread> deadThreads = new ArrayList<BubbleThread>();
+		
 		for(BubbleThread bubbleThread: opponentData.keySet())
 		{
 			BubbleData opponentPosition = opponentData.get(bubbleThread);
@@ -264,6 +266,7 @@ public class GameBoard implements GameRenderer
 				{
 					playerData = BubbleData.consume(playerData, 
 						opponentPosition);
+					deadThreads.add(bubbleThread);
 				}
 				else
 				{
@@ -271,17 +274,63 @@ public class GameBoard implements GameRenderer
 						BubbleData.consume(opponentPosition, playerData));
 					
 					playerAlive = false;
+					break;
 				}
 			}
-			else
+		}
+		
+		for(BubbleThread bubbleThread: deadThreads)
+		{
+			// TODO: Figure out how to stop the BubbleThreads that have been "eaten"
+			opponentData.remove(bubbleThread);
+		}
+		
+		// Check to see if any of the computer-controlled bubbles have
+		// collided with each other
+		BubbleThread[] bubbleThreads = (BubbleThread[]) opponentData.keySet().toArray(); 
+		List<Integer> deadThreadIndices = new ArrayList<Integer>();
+		for(int i = 0; i < bubbleThreads.length; i++)
+		{
+			if(deadThreadIndices.contains(i))
 			{
-				// If there is no collision between the player and the opponent 
-				// bubble currently being considered then check to see if that 
-				// opponent is involved in a collision with any other opponent 
-				// bubbles
+				continue;
+			}
+			
+			for(int j = i + 1; j < bubbleThreads.length; j++)
+			{
+				if(deadThreadIndices.contains(j))
+				{
+					continue;
+				}
 				
+				BubbleData bubble1 = opponentData.get(bubbleThreads[i]); 
+				BubbleData bubble2 = opponentData.get(bubbleThreads[j]); 
+				if(BubbleData.bubblesAreTouching(bubble1, bubble2))
+				{
+					// Note that the player wins in the case of ties
+					if(bubble1.getRadius() >= bubble2.getRadius())
+					{
+						opponentData.put(bubbleThreads[i], 
+							BubbleData.consume(bubble1, bubble2));
+						
+						deadThreadIndices.add(j);
+					}
+					else
+					{
+						opponentData.put(bubbleThreads[j], 
+							BubbleData.consume(bubble2, bubble1));
+						
+						deadThreadIndices.add(i);
+					}
+				}
 				
 			}
+		}
+		
+		for(Integer index: deadThreadIndices)
+		{
+			// TODO: Figure out how to stop the BubbleThreads that have been "eaten"
+			opponentData.remove(bubbleThreads[index]);
 		}
     }
 
@@ -379,6 +428,7 @@ public class GameBoard implements GameRenderer
 	public static GameBoard makeGameBoard(HungryBubblesActivity hostActivity)
 	{
 		// TODO: Resolve the double-reference issue by sharing a Java-synchronized queue of UpdateRequests
+		// => Make sure that this is actually working
 		GameBoard board = new GameBoard(hostActivity);
 		board.setFactory(new BubbleFactory(board.updateRequests));
 		//board.setFactory(new BubbleFactory(board));
