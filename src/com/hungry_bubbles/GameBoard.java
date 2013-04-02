@@ -5,19 +5,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 
 /**
  * Manages the game logic.
  */
-public class GameBoard implements GameRenderer
+public class GameBoard extends View
 {
 	// The maximum number of update requests which can be pending at one time
 	private static final int REQUEST_QUEUE_CAPACITY = 30;
@@ -33,13 +34,18 @@ public class GameBoard implements GameRenderer
 
 	private static final String WIN_MESSAGE = "Congratulations! You Won";
 	private static final String LOSE_MESSAGE = "You were eaten!";
+
+	private static final int SMALLER_THAN_PLAYER_COLOR = Color.BLUE;
+	private static final int LARGER_THAN_PLAYER_COLOR = Color.RED;
 	
 	private HungryBubblesActivity hostActivity;
-	private GameView view;
 	private BubbleData playerData;
-	private List<BubbleData> opponents;
 	private Map<BubbleThread, BubbleData> opponentData;
+	
+	// Responsible for continuously starting new opponent BubbleThreads 
+	// throughout the game
 	private BubbleFactory bubbleFactory;
+	private Thread bubbleFactoryThread;
 	
 	// TODO: Uncomment or remove
 	//private BlockingQueue<UpdateRequest> updateRequests;
@@ -53,19 +59,27 @@ public class GameBoard implements GameRenderer
 
 	private static int boardHeight;
 	private boolean initialized;
-
 	private boolean playerAlive;
+	
+	// Keeps track of the location of the last touch event. These variables
+	// will be set to a negative value if the player is not currently
+	// moving their piece
+	private float lastTouchX, lastTouchY;
+	
+	// Set to true whenever the player presses down on top of the player
+	// bubble piece and then set back to false when the player lifts their
+	// finger
+	private boolean playerTouchActive; 
 	
 	private GameBoard(HungryBubblesActivity hostActivity)
 		throws IllegalArgumentException
 	{
+		// The host activity serves as the Context for this view
+		super(hostActivity);
+		
 		GameUtils.throwIfNull("hostActivity", "GameBoard", hostActivity);
 		
 		this.hostActivity = hostActivity;
-		
-		// A GameView must be registered with this GameBoard in order to 
-		// assign a value to this field
-		view = null;
 		
 		// Player is considered to be alive until it is eaten by another bubble
 		// even though the player's game piece has not been initialized yet;
@@ -76,7 +90,6 @@ public class GameBoard implements GameRenderer
 		playerData = null;
 		
 		bubbleFactory = null;
-		opponents = new ArrayList<BubbleData>();
 		opponentData = new HashMap<BubbleThread, BubbleData>();
 		
 		// TODO: Remove this if NonBlockingReadQueue works
@@ -91,47 +104,8 @@ public class GameBoard implements GameRenderer
 		updateRequests = new NonBlockingReadQueue<UpdateRequest>();
 		
 		initialized = false;
+		playerTouchActive = false;
 	}
-
-	@Override
-    public void renderGame(Canvas canvas)
-    {
-		if(!initialized)
-		{
-			// Stores the size of the physical screen. This value only needs
-			// to be retrieved once since this activity is locked in horizontal
-			// orientation
-			screenWidth = canvas.getWidth();
-			screenHeight = canvas.getHeight();
-			
-			// The actual, effective size of the game board is 2 * MAX_RADIUS
-			// units larger than the physical screen in both directions. This
-			// additional area is used as a spawning area for new 
-			// computer-controlled bubbles so that bubbles will not spawn on 
-			// top of the player.
-			boardWidth = screenWidth + (2 * AppInfo.MAX_RADIUS); 
-			boardHeight = screenHeight + (2 * AppInfo.MAX_RADIUS);
-			
-			// Start the player centered in the screen
-			playerData = new BubbleData(Color.BLACK, screenWidth / 2, 
-				screenHeight / 2, AppInfo.PLAYER_STARTING_RADIUS);
-			initialized = true;
-			playerAlive = true;
-		}
-
-		applyUpdates();
-		resolveConflicts();
-		
-		if(!playerAlive)
-		{
-			endGame();
-		}
-		else
-		{
-			drawPlayer(canvas);
-			drawOppponents(canvas);
-		}
-    }
 
 	/**
 	 * Ends the current game.
@@ -143,12 +117,6 @@ public class GameBoard implements GameRenderer
 	private void endGame()
 		throws IllegalStateException
     {
-		if(view == null)
-		{
-			throw new IllegalStateException("In GameBoard: a GameView must " +
-				"be registered before endGame() can be called");
-		}
-		
 		String message;
 		
 		if(playerAlive)
@@ -160,10 +128,10 @@ public class GameBoard implements GameRenderer
 			message = LOSE_MESSAGE;
 		}
 		
-	    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(view.getContext());
+	    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getContext());
 	    dialogBuilder.setMessage(message);
 	    dialogBuilder.setPositiveButton("Play Again", 
-	    	new OnClickListener()
+	    	new DialogInterface.OnClickListener()
 			{
 				@Override
 				public void onClick(DialogInterface dialog, int which)
@@ -174,7 +142,7 @@ public class GameBoard implements GameRenderer
 			});
 	    
 	    dialogBuilder.setNegativeButton("Quit", 
-	    	new OnClickListener()
+	    	new DialogInterface.OnClickListener()
 			{
 				@Override
 				public void onClick(DialogInterface dialog, int which)
@@ -186,49 +154,100 @@ public class GameBoard implements GameRenderer
 	    dialogBuilder.create().show();
     }
 
-	@Override
-    public void registerView(GameView view)
-    {
-		this.view = view;   
-    }
 
 	/**
+	 * Draws the current game board on the provided {@link Canvas}.
+	 */
+	@Override
+	protected void onDraw(Canvas canvas)
+	{
+		super.onDraw(canvas);
+
+		if(!initialized)
+		{
+			// Stores the size of the physical screen. This value only needs
+			// to be retrieved once since this activity is locked in horizontal
+			// orientation
+			screenWidth = canvas.getWidth();
+			screenHeight = canvas.getHeight();
+			
+			// The actual, effective size of the game board is MAX_RADIUS
+			// units larger than the physical screen in both directions. This
+			// additional area is used as a spawning area for new 
+			// computer-controlled bubbles so that bubbles will not spawn on 
+			// top of the player.
+			boardWidth = screenWidth + (2 * AppInfo.MAX_RADIUS); 
+			boardHeight = screenHeight + (2 * AppInfo.MAX_RADIUS);
+			
+			// Start the player centered in the screen (accounting for the
+			// virtual padding which is used as a spawning area for opponent
+			// bubbles)
+			float playerX = (screenWidth / 2) + AppInfo.MAX_RADIUS;
+			float playerY = (screenHeight / 2) + AppInfo.MAX_RADIUS; 
+			playerData = new BubbleData(Color.BLACK, playerX, playerY,
+				AppInfo.PLAYER_STARTING_RADIUS);
+			
+			initialized = true;
+			playerAlive = true;
+		}
+
+		applyUpdates();
+		resolveConflicts();
+		updateBubbleColors();
+		
+		if(!playerAlive)
+		{
+			endGame();
+		}
+		else
+		{
+			drawPlayer(canvas);
+			drawOppponents(canvas);
+		}
+	}
+	
+	/**
 	 * Handles a the {@link MotionEvent} generated as a result of a player 
-	 * touch on the screen.
+	 * touch interaction.
+	 * 
+	 * @return	{@code true} if the {@link MotionEvent} was handled 
+	 * 			successfully and false otherwise. 
 	 * 
 	 * @throws IllegalStateException	If no {@link GameView} has been 
 	 * 									registered with this {@link GameBoard}
-	 * 									yet
+	 * 									yet.
 	 */
 	@Override
-    public boolean handlePlayerTouch(MotionEvent e)
-		throws IllegalStateException
-    {
-		if(view == null)
-		{
-			throw new IllegalStateException("In GameBoard: a GameView must " +
-				"be registered before endGame() can be called");
-		}
+	public boolean onTouchEvent(MotionEvent e)
+	{
+		int eventAction = e.getAction();
+		boolean eventHandled = false;
 		
-		if(!isValidPlayerTouch(e))
+		if(eventAction == MotionEvent.ACTION_DOWN)
 		{
-			return false;
+			eventHandled = handleActionDownEvent(e);
+		}
+		else if(eventAction == MotionEvent.ACTION_UP)
+		{
+			eventHandled = handleActionUpEvent(e);
+		}
+		else if(playerTouchActive)
+		{
+			eventHandled = handleContiuedTouchEvent(e);
 		}
 
-		playerData = BubbleData.updatePosition(playerData, e.getX(), e.getY());
+		return eventHandled;
+	}
 
-		// Causes the game view to be redrawn
-		view.invalidate();
+
 		
-		return true;
-    }
-	
-	public static int getScreenWidth()
+
+	public int getScreenWidth()
 	{
 		return screenWidth;
 	}
 	
-	public static int getScreenHeight()
+	public  int getScreenHeight()
 	{
 		return screenHeight;
 	}
@@ -242,10 +261,159 @@ public class GameBoard implements GameRenderer
 	{
 		return boardHeight;
 	}
+	
+	/**
+	 * Handle {@link MotionEvent}s triggered by the player pressing down on
+	 * the screen.
+	 * 
+	 * @param e		The {@link MotionEvent} triggered by the player touching
+	 * 				the device screen.
+	 * 
+	 * @return		{@code true} if the {@link MotionEvent} was handled and
+	 * 				{@code false} otherwise (i.e. if the player touched a
+	 * 				location outside of the area of the screen currently
+	 * 				occupied by the player's bubble).
+	 */
+	private boolean handleActionDownEvent(MotionEvent e)
+	{	
+		if(!isValidPlayerTouch(e))
+		{
+			return false;
+		}
+		
+		playerTouchActive = true;
+		
+		float touchX = e.getX();
+		float touchY = e.getY();
+		
+		// Adds on the virtual padding so that the player's data can be 
+		// handled in a uniform manner with the data for the opponent 
+		// bubbles which are created on a conceptual coordinate grid which 
+		// adds an AppInfo.MAX_RADIUS padding around the physical screen
+		BubbleData newPlayerData = BubbleData.updatePosition(playerData, 
+			touchX + AppInfo.MAX_RADIUS, touchY + AppInfo.MAX_RADIUS);
+		
+		if(outOfBounds(newPlayerData.getX(), newPlayerData.getY(), newPlayerData.getRadius()))
+		{
+			// The MotionEvent was handled, but since the player cannot move 
+			// off the screen the player position will not be updated, but
+			// the position of the touch point is recorded so keep player
+			// movement in sync with the motion of the player's finger.
+			lastTouchX = touchX;
+			lastTouchY = touchY;
+			
+			return true;
+		}
 
-	private void setFactory(BubbleFactory bubbleFactory)
+		playerData = newPlayerData;
+		
+		// Causes the game view to be redrawn
+		invalidate();
+		
+		// It is important that these values be updated after the the view
+		// is invalidated (by calling view.invalidate()) so that these values
+		// will not be used when redrawing the view
+		lastTouchX = touchX;
+		lastTouchY = touchY;
+		
+		return true;
+	}
+	
+	/**
+	 * Handle {@link MotionEvent}s triggered by the player lifting their finger
+	 * off of the screen.
+	 * the screen.
+	 * 
+	 * @param e		The {@link MotionEvent} triggered by the player lifting 
+	 * 				their finger after touching	the device screen.
+	 * 
+	 * @return		Will always return {@code true} (i.e. this type of 
+	 * 				{@link MotionEvent} will always be handled).
+	 */
+	private boolean handleActionUpEvent(MotionEvent e)
+	{
+		playerTouchActive = false;
+		return true;
+	}
+	
+	/**
+	 * Handles {@link MotionEvent}s which result from the player holding their finger 
+	 * down on the screen and moving it across the screen (i.e. all of the
+	 * touch related {@link MotionEvent}s which are fired between ACTION_DOWN
+	 * and ACTION_UP {@link MotionEvent}s) 
+	 * 
+	 * @param e		The {@link MotionEvent} fired as a result of continued 
+	 * 				touch interaction after initial contact with the screen
+	 *  
+	 * @return		{@code true} if the {@link MotionEvent} was handled and
+	 * 				{@code false} otherwise.
+	 */
+	private boolean handleContiuedTouchEvent(MotionEvent e)
+	{
+		// If there are no valid coordinates available for the last touch 
+		// event then treat this the same as if the player had just touched
+		// the screen (an ACTION_DOWN event)
+		if(lastTouchX < 0 || lastTouchY < 0)
+		{
+			return handleActionDownEvent(e);
+		}
+
+		float touchX = e.getX();
+		float touchY = e.getY();
+
+		float changeInX = touchX - lastTouchX;
+		float changeInY = touchY - lastTouchY;
+		
+		// Move the player by the same amount that the player's touch point
+		// moved. Continuously moving the player bubble by the delta in touch
+		// point locations instead of continuously checking to see if the
+		// player touched inside the player bubble and moving the player
+		// bubble to be centered on the touch point location makes the
+		// touch interaction more responsive as the UI does not always
+		// update as fast as the player moves their finger, which results
+		// in the player's finger "slipping" off of the bubble
+		BubbleData newPlayerData = BubbleData.updatePosition(playerData, 
+			playerData.getX() + changeInX, playerData.getY() + changeInY);
+			
+		if(outOfBounds(newPlayerData.getX(), newPlayerData.getY(), newPlayerData.getRadius()))
+		{
+			// The MotionEvent was handled, but since the player cannot move 
+			// off the screen the player position will not be updated, but
+			// the position of the touch point is recorded so keep player
+			// movement in sync with the motion of the player's finger.
+			lastTouchX = touchX;
+			lastTouchY = touchY;
+			
+			return true;
+		}
+		
+		playerData = newPlayerData;
+		
+		// Causes the UI to be redrawn
+		invalidate();
+		
+		// It is important that these values be updated after the the view
+		// is invalidated (by calling view.invalidate()) so that these values
+		// will not be used when redrawing the view
+		lastTouchX = touchX;
+		lastTouchY = touchY;
+		
+		return true;
+	}
+	
+	/**
+	 * Sets the {@link BubbleFactory} to be used by this {@code GameBoard} to
+	 * start new {@link BubbleThreads}, each of which represents a different
+	 * opponent bubble, and starts that {@link BubbleFactory} running in its
+	 * own {@link Thread}. 
+	 */
+	private void setAndStartFactory(BubbleFactory bubbleFactory)
 	{
 		this.bubbleFactory = bubbleFactory;
+		this.bubbleFactoryThread = new Thread(this.bubbleFactory);
+		
+		// TODO: Uncomment once BubbleFactory is actually implemented
+		//bubbleFactoryThread.start();
 	}
 
 	/**
@@ -293,7 +461,7 @@ public class GameBoard implements GameRenderer
 		
 		// Check to see if any of the computer-controlled bubbles have
 		// collided with each other
-		BubbleThread[] bubbleThreads = (BubbleThread[]) opponentData.keySet().toArray(); 
+		Object[] bubbleThreads = opponentData.keySet().toArray(); 
 		List<Integer> deadThreadIndices = new ArrayList<Integer>();
 		for(int i = 0; i < bubbleThreads.length; i++)
 		{
@@ -309,21 +477,21 @@ public class GameBoard implements GameRenderer
 					continue;
 				}
 				
-				BubbleData bubble1 = opponentData.get(bubbleThreads[i]); 
-				BubbleData bubble2 = opponentData.get(bubbleThreads[j]); 
+				BubbleData bubble1 = opponentData.get((BubbleThread) bubbleThreads[i]); 
+				BubbleData bubble2 = opponentData.get((BubbleThread) bubbleThreads[j]); 
 				if(BubbleData.bubblesAreTouching(bubble1, bubble2))
 				{
 					// Note that the player wins in the case of ties
 					if(bubble1.getRadius() >= bubble2.getRadius())
 					{
-						opponentData.put(bubbleThreads[i], 
+						opponentData.put((BubbleThread) bubbleThreads[i], 
 							BubbleData.consume(bubble1, bubble2));
 						
 						deadThreadIndices.add(j);
 					}
 					else
 					{
-						opponentData.put(bubbleThreads[j], 
+						opponentData.put((BubbleThread) bubbleThreads[j], 
 							BubbleData.consume(bubble2, bubble1));
 						
 						deadThreadIndices.add(i);
@@ -336,7 +504,7 @@ public class GameBoard implements GameRenderer
 		for(Integer index: deadThreadIndices)
 		{
 			// TODO: Figure out how to stop the BubbleThreads that have been "eaten"
-			opponentData.remove(bubbleThreads[index]);
+			opponentData.remove((BubbleThread) bubbleThreads[index]);
 		}
     }
 
@@ -362,13 +530,43 @@ public class GameBoard implements GameRenderer
         	e.printStackTrace();
         }
     }
+
+	/**
+	 * Update the colors of all of the bubbles currently on the board, with
+	 * all bubbles which are smaller than the player's bubble being made blue
+	 * and all the bubbles which are larger being made red.
+	 */
+	private void updateBubbleColors()
+	{
+		for(BubbleThread bubbleThread: opponentData.keySet())
+		{
+			BubbleData currentBubbleData = opponentData.get(bubbleThread);
+			BubbleData recoloredBubbleData;
+			if(currentBubbleData.getRadius() <= playerData.getRadius())
+			{
+				recoloredBubbleData = BubbleData.updateColor(currentBubbleData,
+					SMALLER_THAN_PLAYER_COLOR);
+			}
+			else
+			{
+				recoloredBubbleData = BubbleData.updateColor(currentBubbleData,
+					LARGER_THAN_PLAYER_COLOR);
+			}
+			
+			opponentData.put(bubbleThread, recoloredBubbleData);
+		}
+	}
 	
 	/**
 	 * Used to determine whether or not the point with the given x and y
-	 * coordinates is located on the physical screen.
+	 * coordinates (which include virtual padding for the bubble spawning zone)
+	 * is located on the physical screen.
 	 */
-	private boolean outOfBounds(float x, float y, float radius)
+	private boolean outOfBounds(float virtualX, float virtualY, float radius)
 	{
+		float x = virtualX - AppInfo.MAX_RADIUS;
+		float y = virtualY - AppInfo.MAX_RADIUS;
+		
 		if((x + radius < 0) || (x - radius < 0) || (x + radius > screenWidth) || (x - radius > screenWidth) ||
 		   (y + radius < 0) || (y - radius < 0) || (y + radius > screenHeight) || (y - radius > screenHeight))
 		{
@@ -391,8 +589,10 @@ public class GameBoard implements GameRenderer
 	 */
 	private boolean isValidPlayerTouch(MotionEvent e)
 	{
-		float eventX = e.getX();
-		float eventY = e.getY();
+		// Account for the virtual padding
+		float eventX = e.getX() + AppInfo.MAX_RADIUS;
+		float eventY = e.getY() + AppInfo.MAX_RADIUS;
+		
 		int playerRadius = playerData.getRadius();
 		
 		if((Math.abs(playerData.getX() - eventX) <= playerRadius) && 
@@ -409,18 +609,20 @@ public class GameBoard implements GameRenderer
 	{
 		Paint circlePaint = new Paint();
 		circlePaint.setColor(data.getColor());
-		canvas.drawCircle(data.getX(), data.getY(), data.getRadius(), circlePaint);
+		
+		// Translate between the virtual coordinates which include a 
+		// AppInfo.MAX_RADIUS conceptual padding around the physical screen
+		// in order to provide the opponent bubbles with a place to spawn
+		// without being able to spawn on top of the player.
+		float bubbleX = data.getX() - AppInfo.MAX_RADIUS;
+		float bubbleY = data.getY() - AppInfo.MAX_RADIUS;
+		
+		canvas.drawCircle(bubbleX, bubbleY, data.getRadius(), circlePaint);
 	}
 	
 	private void drawPlayer(Canvas canvas)
 	{
 		drawBubble(canvas, playerData);
-		
-		/* TODO: Remove
-		Paint circlePaint = new Paint();
-		circlePaint.setColor(playerData.getColor());
-		canvas.drawCircle(playerData.getX(), playerData.getY(), playerData.getRadius(), circlePaint);
-		*/
 	}
 
 	private void drawOppponents(Canvas canvas)
@@ -431,12 +633,22 @@ public class GameBoard implements GameRenderer
 		}
     }
 	
-	public static GameBoard makeGameBoard(HungryBubblesActivity hostActivity)
+	/**
+	 * Factory method for initializing a {@code GameBoard} object, including 
+	 * starting all active components (threads) which the board uses to drive
+	 * game mechanics.
+	 * 
+	 * @param hostActivity	The {@link Activity} which is hosting this 
+	 * 						{@code GameBoard}
+	 *  
+	 * @return	A fully initialized and active {@code GameBoard}.
+	 */
+	public static GameBoard makeActiveGameBoard(HungryBubblesActivity hostActivity)
 	{
 		// TODO: Resolve the double-reference issue by sharing a Java-synchronized queue of UpdateRequests
 		// => Make sure that this is actually working
 		GameBoard board = new GameBoard(hostActivity);
-		board.setFactory(new BubbleFactory(board.updateRequests));
+		board.setAndStartFactory(new BubbleFactory(board.updateRequests));
 		//board.setFactory(new BubbleFactory(board));
 		return board;
 	}

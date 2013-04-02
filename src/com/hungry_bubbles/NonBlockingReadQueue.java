@@ -144,13 +144,6 @@ public class NonBlockingReadQueue<T>
 			return retVal;
 		}
 		
-		public void setValue(E value)
-		{
-			nodeLock.lock();
-			this.value = value;
-			nodeLock.unlock();
-		}
-		
 		public void lockNode()
 		{
 			nodeLock.lock();
@@ -165,19 +158,6 @@ public class NonBlockingReadQueue<T>
 		public void unlockNode()
 		{
 			nodeLock.unlock();
-		}
-		
-		public boolean isLocked()
-		{
-			boolean unlocked = nodeLock.tryLock();
-			if(unlocked)
-			{
-				// Unlock the lock since tryLock() resulted in the lock being
-				// locked by this thread
-				nodeLock.unlock();
-			}
-			
-			return !unlocked;
 		}
 	}
 }

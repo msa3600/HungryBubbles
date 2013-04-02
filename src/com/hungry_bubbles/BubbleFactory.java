@@ -40,11 +40,11 @@ public class BubbleFactory implements Runnable
 		 BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
 		 
 		 if (Range_Size > AppInfo.PLAYER_STARTING_RADIUS){
-			BubbleData.updateColor( bubble  , Color.RED);
-		 	}
-		 if (Range_Size < AppInfo.PLAYER_STARTING_RADIUS){
-			 BubbleData.updateColor( bubble  , Color.BLUE);
-			 }
+				BubbleData.updateColor( bubble  , Color.RED);
+			 	}
+			 if (Range_Size < AppInfo.PLAYER_STARTING_RADIUS){
+				 BubbleData.updateColor( bubble  , Color.BLUE);
+				 }
 		 
 		 
 		// TODO: Implement
@@ -53,6 +53,7 @@ public class BubbleFactory implements Runnable
 	@Override
     public void run()
     {
+		
 	    // TODO Auto-generated method stub
 	    
     }
