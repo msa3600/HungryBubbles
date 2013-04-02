@@ -33,8 +33,8 @@ public class BubbleFactory implements Runnable
 		 int Min = AppInfo.MIN_RADIUS;
 		 int Range_Size = Min + (int)(Math.random() * ((Max - Min) + 1));
 		 //  Virtual board
-		int Y_Position = (int)(Math.random() * (GameBoard.getBoardHeight() - GameBoard.getScreenHeight())); 
-		int X_Position = (int)(Math.random() * (GameBoard.getBoardWidth() - GameBoard.getScreenHeight()));
+		int Y_Position = (int)(Math.random() * (AppInfo.MAX_RADIUS)); 
+		int X_Position = (int)(Math.random() * (AppInfo.MAX_RADIUS));
 		
 		 // update color
 		 BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
