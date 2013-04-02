@@ -8,7 +8,6 @@ import android.widget.LinearLayout;
 
 public class HungryBubblesActivity extends Activity {
 	private GameBoard gameBoard;
-	private GameView gameView;	
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -24,12 +23,11 @@ public class HungryBubblesActivity extends Activity {
 	
 	public void startGame()
 	{
-        gameBoard = GameBoard.makeGameBoard(this);
-        gameView = new GameView(this, gameBoard);
+        gameBoard = GameBoard.makeActiveGameBoard(this);
         
         LinearLayout layout = (LinearLayout) findViewById(R.id.main_layout);  
         layout.removeAllViews();
-        layout.addView(gameView);
+        layout.addView(gameBoard);
 	}
 	
 	public void quit()
