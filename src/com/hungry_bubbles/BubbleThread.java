@@ -45,13 +45,13 @@ public class BubbleThread implements Runnable
 	@Override
 	public void run() {
 		// need the max and min value for the screen height and width 
-		
-		//for (int i = 0; i < GameBoard.getScreenWidth()*2; i++){
-		//	X_Move = GameBoard.getScreenWidth()* (int)Math.random() + Value_Change ;
-		//} 
-		//for ( int i = 0 ; i <GameBoard.getScreenHeight()*2; i++ ){
-			//Y_Move = GameBoard.getScreenHeight() * (int)Math.random() + Value_Change;
-		//}
+	/*
+		for (int i = 0; i < GameBoard.getScreenWidth()*2; i++){
+	//	X_Move = GameBoard.getScreenWidth()* (int)Math.random() + Value_Change ;
+	//	} 
+	//for ( int i = 0 ; i <GameBoard.getScreenHeight()*2; i++ ){
+	//Y_Move = GameBoard.getScreenHeight() * (int)Math.random() + Value_Change;*/
+		}
 		
 		//bubbleData = (color , X_Move , Y_Move, radius);
 		

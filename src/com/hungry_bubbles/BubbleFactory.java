@@ -21,7 +21,8 @@ public class BubbleFactory implements Runnable
 	}
 	*/
 	
-	public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests) 
+	public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests, int Screen_Height , int Screen_Width, int Virtual_padding)
+	
 	{
 		//this.gameBoard = gameBoard;
 		this.updatesQueue = updateRequests;
