@@ -4,9 +4,11 @@ import android.app.Application;
 
 public class AppInfo extends Application
 {
-	public static final int MAX_RADIUS = 100; 
+	public static final int MAX_RADIUS = 100;
+	public static final int MIN_RADIUS = 20; 
 	public static final int PLAYER_STARTING_RADIUS = 50;
 	public static final int MAX_BUBBLES = 4;
+
 	
 	@Override
 	public void onCreate()
