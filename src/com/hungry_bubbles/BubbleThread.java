@@ -1,5 +1,7 @@
 package com.hungry_bubbles;
 
+import java.util.concurrent.BlockingQueue;
+
 /**
  * Drives the movement and actions of the computer-controlled bubbles.
  *  
@@ -7,6 +9,8 @@ package com.hungry_bubbles;
  */
 public class BubbleThread implements Runnable 
 {
+	// TODO: Clean up commmented out code
+	
 	private BubbleData bubbleData;
 	
 	/**
@@ -15,23 +19,22 @@ public class BubbleThread implements Runnable
 	 * @param bubbleData
 	 * @throws IllegalArgumentException
 	 */
+	/* TODO: Uncomment or remove
 	public BubbleThread(GameBoard board, int color, float startX, 
 		float startY, int radius)
 		throws IllegalArgumentException
 	{
-		throwIfNull("GameBoard board", board);
+		GameUtils.throwIfNull("board", "BubbleThread", board);
 		this.bubbleData = new BubbleData(color, startX, startY, radius);
 	}
-	
-	private void throwIfNull(String name, Object obj)
+	*/
+
+	public BubbleThread(BlockingQueue<UpdateRequest> updatesQueue, int color, float startX, 
+		float startY, int radius)
 		throws IllegalArgumentException
 	{
-		if(obj == null)
-		{
-			String className = this.getClass().getName();
-			throw new IllegalArgumentException("In " + className + ": " +
-				" construction argument '" + name + "' cannot be null");
-		}
+		GameUtils.throwIfNull("updatesQueue", "BubbleThread", updatesQueue);
+		this.bubbleData = new BubbleData(color, startX, startY, radius);
 	}
 
 	/**
@@ -41,6 +44,13 @@ public class BubbleThread implements Runnable
 	public void run() {
 		// TODO Auto-generated method stub
 
+		// Generate a new position for the bubble and then make the following call
+		// where newPosition is the BubbleData object representing the bubble's
+		// new position. Note that we are going to have to play around with how
+		// far the bubble moves every time, so just pick some fixed value (defined
+		// as a constant) and go with that for now (5 would be my best guess)
+		
+		// updatesQueue.put(newPosition);
 	}
 
 }

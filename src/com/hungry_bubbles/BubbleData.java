@@ -1,7 +1,5 @@
 package com.hungry_bubbles;
 
-import android.graphics.Color;
-
 /**
  * Thread-safe representation of a "bubble" in the game which uses immutable
  * state to allow for safe sharing of BubbleData object among different 
@@ -43,6 +41,15 @@ public class BubbleData
 		return radius;
 	}
 
+	public static boolean bubblesAreTouching(BubbleData bubble1, BubbleData bubble2)
+	{
+	    double a = bubble1.getRadius() + bubble2.getRadius();
+	    double dx = bubble1.getX() + bubble2.getX();
+	    double dy = bubble1.getY() + bubble2.getY();
+
+	    return a * a > (dx * dx + dy * dy);
+	}
+	
 	public static BubbleData consume(BubbleData consumer, BubbleData victim)
 	{
 		// If the given bubble information indicates that the other bubble 
@@ -79,4 +86,10 @@ public class BubbleData
 		return new BubbleData(bubble.getColor(), bubble.getX(), bubble.getY(), 
 			radius);
 	}
+
+	public static BubbleData updatePosition(BubbleData bubble, float x,
+            float y)
+    {
+		return new BubbleData(bubble.getColor(), x, y, bubble.getRadius());
+    }
 }
