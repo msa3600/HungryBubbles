@@ -58,7 +58,7 @@ public class BubbleFactory
 		 int X_Position = (int)(Math.random() * (AppInfo.MAX_RADIUS));
 		
 		 // update color
-		 BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
+		BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
 		 
 		 if (Range_Size > AppInfo.PLAYER_STARTING_RADIUS)
 		 {

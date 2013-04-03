@@ -1,3 +1,7 @@
 gen/*
 bin/*
+<<<<<<< HEAD
 .settings/*
+=======
+.settings/*
+>>>>>>> fa8ee229ce67d7d055167c75d1363a6c3829956f
