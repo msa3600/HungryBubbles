@@ -254,9 +254,6 @@ public class GameBoard extends View
 		return eventHandled;
 	}
 
-
-		
-
 	public int getScreenWidth()
 	{
 		return screenWidth;

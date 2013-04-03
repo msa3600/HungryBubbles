@@ -45,6 +45,7 @@ public class AppInfo extends Application
 	    SharedPreferences.Editor editor = gameData.edit();
 		editor.putInt(TOTAL_GAMES, totalGames);
 		editor.putInt(WINS, totalWins);
+
 		editor.commit();
 	}
 	
