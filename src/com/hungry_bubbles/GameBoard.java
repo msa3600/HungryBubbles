@@ -648,7 +648,7 @@ public class GameBoard extends View
 		// TODO: Resolve the double-reference issue by sharing a Java-synchronized queue of UpdateRequests
 		// => Make sure that this is actually working
 		GameBoard board = new GameBoard(hostActivity);
-		board.setAndStartFactory(new BubbleFactory(board.updateRequests));
+		board.setAndStartFactory(new BubbleFactory(board.updateRequests, screenHeight , screenWidth, 50) );
 		//board.setFactory(new BubbleFactory(board));
 		return board;
 	}

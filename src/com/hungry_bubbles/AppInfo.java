@@ -22,7 +22,7 @@ public class AppInfo extends Application
 		super.onCreate();
 		SharedPreferences settings = getSharedPreferences(GAME_DATA, 0);
 	       wins = settings.getInt("Wins", 0);
-	       games = settings.geInt("Games", 0);
+	       games = settings.getInt("Games", 0);
 		// TODO: Load past game data (if any) here 
 	}
 	
@@ -36,10 +36,10 @@ public class AppInfo extends Application
 	public void endGame(boolean win){
 	      SharedPreferences settings = getSharedPreferences(GAME_DATA, 0);
 	      SharedPreferences.Editor editor = settings.edit();
-		editor.putInt("Games", editor.get("Games", 0) + 1 );
+		editor.putInt("Games", settings.getInt("Games", 0) + 1 );
 		games++;
 		if(win){
-			editor.putInt("Wins", editor.get("Wins", 0) + 1 );
+			editor.putInt("Wins", settings.getInt("Wins", 0) + 1 );
 			wins++;
 		}
 		editor.commit();
