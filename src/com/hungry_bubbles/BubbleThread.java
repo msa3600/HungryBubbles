@@ -12,43 +12,31 @@ import android.util.Log;
 public class BubbleThread extends Thread
 {
 	// How far the bubble will be moved at a time
-	private static final int MOVE_INCREMENT = 20;
+	private static final int MOVE_INCREMENT = 5;
 	
 	// How long the thread should sleep for between bubble position updates
 	// in milliseconds
-	private static final int SLEEP_TIME = 200;
+	private static final int SLEEP_TIME = 50;
 	
 	// "Tag" used for logging information and events within this class, such as
 	// the absence if invalid constructor arguments are provided 
 	private static final String TAG = "updatesQueue";
 	
-	// TODO: Only use one: queue or handler
+	// TODO: Update comment
 	// Shared data structure used to submit position update requests which will
 	// then be read by the GameBoard and rendered
-	//private NonBlockingReadQueue<UpdateRequest> updatesQueue;
-	
 	private Handler messageHandler;
-	
-	// TODO: Uncomment or remove
-	//private BlockingQueue<UpdateRequest> updatesQueue;
-	
 	
 	private BubbleData bubbleData;
 	private int screenWidth, screenHeight;
+	
+	// TODO: Add comment
 	private int virtualPadding;
+	
+	// Keeps track of whether or not this bubble has been "eaten" by another
+	// bubble
 	private boolean eaten;
 
-	/* TODO: Uncomment or remove
-	public BubbleThread(BlockingQueue<UpdateRequest> updatesQueue, 
-		BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
-		int screenHeight)
-	*/
-	
-	/*
-	public BubbleThread(NonBlockingReadQueue<UpdateRequest> updatesQueue, 
-		BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
-		int screenHeight, int virtualPadding)
-		*/
 	public BubbleThread(Handler messageHandler, 
 			BubbleData startingData, int screenWidth, 
 			int screenHeight, int virtualPadding)
@@ -144,6 +132,11 @@ public class BubbleThread extends Thread
 		{
 			eaten = true;
 		}
+	}
+	
+	public void stopThread()
+	{
+		this.wasEaten();
 	}
 }
 

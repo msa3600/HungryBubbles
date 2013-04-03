@@ -102,9 +102,15 @@ public class GameBoard extends View
 	// finger
 	private boolean playerTouchActive;
 	
+	// Pop-up dialog which will be displayed anytime a game is won or lost 
+	private AlertDialog gameOverDialog;
+
+	private boolean gameOver;
+	
 	public GameBoard(HungryBubblesActivity hostActivity)
 		throws IllegalArgumentException
 	{
+
 		// The host activity serves as the Context for this view
 		super(hostActivity);
 		
@@ -112,8 +118,30 @@ public class GameBoard extends View
 		
 		this.hostActivity = hostActivity;
 
+		// Get the Application instance which represents the application
+		// the game board is a part of. The returned instance will be
+		// of the custom Application subclass type AppInfo since the
+		// android:name property of the application tag in the AndroidManifest
+		// file for this application is set to ".AppInfo"
 		appInfoInstance = (AppInfo) hostActivity.getApplication();
 		
+		mHandler = new Handler()
+		{
+			public void handleMessage(Message msg)
+			{
+				handleUpdateRequest((UpdateRequest) msg.obj);
+				startBubbleIfAppropriate();
+			}
+		};
+		
+		initialize();
+	}
+	
+	/**
+	 * Sets the game board and view to its initial state.
+	 */
+	private void initialize()
+	{
 		// Player is considered to be alive until it is eaten by another bubble
 		// even though the player's game piece has not been initialized yet;
 		// initialization is deferred until the first UI update because the
@@ -122,50 +150,22 @@ public class GameBoard extends View
 		playerAlive = true;		
 		playerData = null;
 		
+		opponentData = new HashMap<BubbleThread, BubbleData>();
+		suspendedBubbles = new ArrayList<BubbleData>();
+		numOpponents = 0;
+		
+		initialized = false;
+		playerTouchActive = false;
+		suspended = false;
+		gameOver = false;
+		
 		// The BubbleFactory constructor requires the dimensions of the 
 		// physical screen, which will not be available until the UI is drawn
 		// for the first time (see onDraw())
 		bubbleFactory = null;
 		
-		opponentData = new HashMap<BubbleThread, BubbleData>();
-		suspendedBubbles = new ArrayList<BubbleData>();
-		numOpponents = 0;
-		
-		// TODO: Remove this if NonBlockingReadQueue works
-		//
-		// Create a blocking queue which can hold up to 
-		// REQUEST_QUEUE_CAPACITY update requests and enforces fairness (i.e. 
-		// all threads which are attempting to add requests to the queue will
-		// be guaranteed the opportunity to do so at some point)
-		//updateRequests = new ArrayBlockingQueue<UpdateRequest>(
-			//REQUEST_QUEUE_CAPACITY, true);
-		
-		updateRequests = new NonBlockingReadQueue<UpdateRequest>();
-		
-		// TODO: Remove if this does not work
-		mHandler = new Handler()
-		{
-			public void handleMessage(Message msg)
-			{
-				// TODO: Remove
-				/*
-				UpdateRequest messageData = (UpdateRequest) msg.obj;
-				BubbleData curPos = opponentData.get(messageData.getRequester());
-				BubbleData newPos = messageData.getNewPosition();
-				Log.d("temp", "Handling message: Update " + messageData.getRequester().getId() +
-					" from (" + curPos.getX() + ", " + curPos.getY() + ") to (" + newPos.getX() +
-					", " + newPos.getY() + ")");
-					*/
-				//
-				
-				handleUpdateRequest((UpdateRequest) msg.obj);
-				startBubbleIfAppropriate();
-			}
-		};
-		
-		initialized = false;
-		playerTouchActive = false;
-		suspended = false;
+		// Causes the view to be redrawn
+		invalidate();
 	}
 
 	/**
@@ -178,10 +178,15 @@ public class GameBoard extends View
 	private void endGame()
 		throws IllegalStateException
     {
+		gameOver = true;
+		
 		// Stop all active threads
 		for(BubbleThread thread: opponentData.keySet())
 		{
-			thread.stop();
+			thread.stopThread();
+			
+			// TODO: Remove
+			//thread.stop();
 		}
 		
 		String message;
@@ -206,7 +211,9 @@ public class GameBoard extends View
 				public void onClick(DialogInterface dialog, int which)
 				{
 					// Restart game
-					hostActivity.startGame();
+					gameOverDialog.dismiss();
+					stop();
+					restartGame();
 				}
 			});
 	    
@@ -216,11 +223,15 @@ public class GameBoard extends View
 				@Override
 				public void onClick(DialogInterface dialog, int which)
 				{
+					// Return to the start screen
+					gameOverDialog.dismiss();
+					stop();
 					hostActivity.quit();
 				}
 			});
 	    
-	    dialogBuilder.create().show();
+	    gameOverDialog = dialogBuilder.create();
+	    gameOverDialog.show();
     }
 
 
@@ -232,6 +243,11 @@ public class GameBoard extends View
 	{
 		super.onDraw(canvas);
 
+		if(gameOver)
+		{
+			return;
+		}
+		
 		if(!initialized)
 		{
 			// Stores the size of the physical screen. This value only needs
@@ -257,9 +273,6 @@ public class GameBoard extends View
 				AppInfo.PLAYER_STARTING_RADIUS, 
 				AppInfo.PLAYER_STARTING_DIRECTION);
 			
-			// TODO
-			//this.bubbleFactory = new BubbleFactory(updateRequests, 
-				//screenHeight, screenWidth, AppInfo.MAX_RADIUS);
 			this.bubbleFactory = new BubbleFactory(mHandler, 
 					screenHeight, screenWidth, AppInfo.MAX_RADIUS);
 			
@@ -267,9 +280,6 @@ public class GameBoard extends View
 			playerAlive = true;
 		}
 
-		// TODO: Uncomment or remove
-		//applyUpdates();
-		
 		resolveCollisions();
 		updateBubbleColors();
 		
@@ -626,7 +636,7 @@ public class GameBoard extends View
     		return;
     	}
     	
-    	opponentData.put(request.getRequester(), request.getNewPosition());
+    	opponentData.put(request.getRequester(), request.getPosition());
     	invalidate();
 	}
 	
@@ -703,13 +713,13 @@ public class GameBoard extends View
 	 */
 	private void startBubbleIfAppropriate()
 	{
-		if(numOpponents < AppInfo.MAX_BUBBLES)
+		if(initialized && numOpponents < AppInfo.MAX_BUBBLES)
 		{
 			UpdateRequest newBubbleInfo = 
 				bubbleFactory.makeNewBubble(BUBBLE_STARTING_COLOR);
 			
 			BubbleThread bubbleThread = newBubbleInfo.getRequester();
-			BubbleData bubbleData = newBubbleInfo.getNewPosition();
+			BubbleData bubbleData = newBubbleInfo.getPosition();
 			opponentData.put(bubbleThread, bubbleData);
 			numOpponents++;
 			
@@ -843,7 +853,10 @@ public class GameBoard extends View
 		for(BubbleThread bubbleThread: opponentData.keySet())
 		{
 			suspendedBubbles.add(opponentData.get(bubbleThread));
-			bubbleThread.stop();
+			bubbleThread.stopThread();
+			
+			// TODO: Remove
+			//bubbleThread.stop();
 		}
 		
 		suspended = true;
@@ -851,26 +864,15 @@ public class GameBoard extends View
 
 	public void stop()
 	{
-		// TODO Auto-generated method stub
-		
+		this.suspend();
 	}
 	
-	// TODO: Remove
-	/**
-	 * Factory method for initializing a {@code GameBoard} object, including 
-	 * starting all active components (threads) which the board uses to drive
-	 * game mechanics.
-	 * 
-	 * @param hostActivity	The {@link Activity} which is hosting this 
-	 * 						{@code GameBoard}
-	 *  
-	 * @return	A fully initialized and active {@code GameBoard}.
-	 */
-	/*
-	public static GameBoard makeActiveGameBoard(HungryBubblesActivity hostActivity)
+	public void restartGame()
 	{
-		GameBoard board = new GameBoard(hostActivity);
-		return board;
+		// Stop all the bubble control threads
+		stop();
+		
+		// Reinitialize the game board/views starting state
+		initialize();
 	}
-	*/
 }
