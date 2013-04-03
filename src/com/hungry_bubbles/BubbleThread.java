@@ -1,69 +1,130 @@
 package com.hungry_bubbles;
 
-import java.util.concurrent.BlockingQueue;
+import android.util.Log;
 
 /**
  * Drives the movement and actions of the computer-controlled bubbles.
  *  
- * @author Timothy Heard
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
-public class BubbleThread implements Runnable 
+public class BubbleThread extends Thread
 {
-	// TODO: Clean up commmented out code
+	// How far the bubble will be moved at a time
+	private static final int MOVE_INCREMENT = 5;
+	
+	// How long the thread should sleep for between bubble position updates
+	// in milliseconds
+	private static final int SLEEP_TIME = 500;
+	
+	// "Tag" used for logging information and events within this class, such as
+	// the absence if invalid constructor arguments are provided 
+	private static final String TAG = "updatesQueue";
+	
+	// Shared data structure used to submit position update requests which will
+	// then be read by the GameBoard and rendered
+	NonBlockingReadQueue<UpdateRequest> updatesQueue;
+	
+	// TODO: Uncomment or remove
+	//private BlockingQueue<UpdateRequest> updatesQueue;
+	
 	
 	private BubbleData bubbleData;
-	private static int X_Move , Y_Move ; 
-	private static int Value_Change = 5;
-	
-	/**
-	 * Creates a new BubbleThread with the given starting data.
-	 * 
-	 * @param bubbleData
-	 * @throws IllegalArgumentException
-	 */
+	private int screenWidth, screenHeight;
+	private int angleOfMotion;
+	private int virtualPadding;
+	private boolean eaten;
+
 	/* TODO: Uncomment or remove
-	public BubbleThread(GameBoard board, int color, float startX, 
-		float startY, int radius)
-		throws IllegalArgumentException
-	{
-		GameUtils.throwIfNull("board", "BubbleThread", board);
-		this.bubbleData = new BubbleData(color, startX, startY, radius);
-	}
+	public BubbleThread(BlockingQueue<UpdateRequest> updatesQueue, 
+		BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
+		int screenHeight)
 	*/
-
-	public BubbleThread(BlockingQueue<UpdateRequest> updatesQueue, int color, float startX, 
-		float startY, int radius)
+	public BubbleThread(NonBlockingReadQueue<UpdateRequest> updatesQueue, 
+		BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
+		int screenHeight, int virtualPadding)
 		throws IllegalArgumentException
 	{
-		GameUtils.throwIfNull("updatesQueue", "BubbleThread", updatesQueue);
-		this.bubbleData = new BubbleData(color, startX, startY, radius);
+		GameUtils.throwIfNull(TAG, "updatesQueue", updatesQueue);
+		GameUtils.throwIfNull(TAG, "startingData", startingData);
+		GameUtils.throwIfInvalidAngle(TAG, "initialAngleOfMotion", initialAngleOfMotion);
+		
+		this.updatesQueue = updatesQueue;
+		this.bubbleData = startingData;
+		this.angleOfMotion = initialAngleOfMotion;
+		this.screenWidth = screenWidth;
+		this.screenHeight = screenHeight;
+		this.virtualPadding = virtualPadding;
+		this.eaten = false;
 	}
 
 	/**
-	 * TODO: Complete comment
+	 * Continuously comes up with a new position for the bubble controlled 
+	 * by this {@code BubbleThread} instance and submits it to the 
+	 * {@code updatesQueue} before sleeping for SLEEP_TIME milliseconds. 
 	 */
 	@Override
-	public void run() {
-		// need the max and min value for the screen height and width 
-	/*
-		for (int i = 0; i < GameBoard.getScreenWidth()*2; i++){
-	//	X_Move = GameBoard.getScreenWidth()* (int)Math.random() + Value_Change ;
-	//	} 
-	//for ( int i = 0 ; i <GameBoard.getScreenHeight()*2; i++ ){
-	//Y_Move = GameBoard.getScreenHeight() * (int)Math.random() + Value_Change;*/
+	public void run()
+	{
+		// TODO: Implement changes to bubble's angle of motion
+		
+		while(true)
+		{
+			synchronized(this)
+			{
+				if(eaten)
+				{
+					return;
+				}
+			}
+			
+			// Move the bubble
+			BubbleData newPosition = BubbleData.move(bubbleData, angleOfMotion, MOVE_INCREMENT);
+			
+			if(!canMoveTo(newPosition))
+			{
+				// Reverse angle of motion
+				angleOfMotion = angleOfMotion >= 180 ? angleOfMotion - 180 : 
+					angleOfMotion + 180;
+				
+				newPosition = BubbleData.move(bubbleData, angleOfMotion, MOVE_INCREMENT);
+			}
+			
+			updatesQueue.put(new UpdateRequest(this, newPosition));
+			
+			try
+			{
+				sleep(SLEEP_TIME);
+			} catch (InterruptedException e)
+			{
+				Log.d(TAG, "InterruptedException occurred in BubbleThread.run()");
+				e.printStackTrace();
+			}
 		}
-		
-		//bubbleData = (color , X_Move , Y_Move, radius);
-		
-		// TODO Auto-generated method stub
-
-		// Generate a new position for the bubble and then make the following call
-		// where newPosition is the BubbleData object representing the bubble's
-		// new position. Note that we are going to have to play around with how
-		// far the bubble moves every time, so just pick some fixed value (defined
-		// as a constant) and go with that for now (5 would be my best guess)
-		
-		// updatesQueue.put(newPosition);
 	}
+	
+	/**
+	 * Used to determine whether or not the position represented by the given
+	 * {@link BubbleData} object is valid. If the position is valid then this
+	 * function will return {@code true}; otherwise it will return 
+	 * {@code false}.
+	 */
+	private boolean canMoveTo(BubbleData position)
+	{
+		float x = position.getX();
+		float y = position.getY();
+		int radius = position.getRadius();
+		
+		return ((x - radius < 0) || (x + radius > screenWidth + (2 * virtualPadding)) ||
+				(y - radius < 0) || (y + radius) > screenHeight + (2 * virtualPadding));
+	}
+
+	public void wasEaten()
+	{
+		synchronized(this)
+		{
+			eaten = true;
+		}
+	}
+}
 
 

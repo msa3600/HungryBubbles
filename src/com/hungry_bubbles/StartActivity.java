@@ -7,9 +7,15 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
+/**
+ * The {@link Activity} subclass which represents the start screen for the 
+ * application.
+ * 
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
+ */
 public class StartActivity extends Activity 
 {
-	private AppInfo appInfo;
+	protected static final int STATS_VIEW_REQUEST_CODE = 0;
 	private Button startGameButton, viewStatsButton, quitButton;
 	
     @Override
@@ -17,13 +23,6 @@ public class StartActivity extends Activity
     {
         super.onCreate(savedInstanceState); 
         setContentView(R.layout.start_screen);
-        
-        // Gets a reference to the Application object which represents this
-        // Android application (since the android:name property in the 
-        // application tag within the AndroidManifest file is set to .AppInfo
-        // the custom Application subclass AppInfo will be used by Android
-        // for this purpose
-        appInfo = (AppInfo) getApplication();
         
         startGameButton = (Button) findViewById(R.id.start_game_button);
         viewStatsButton = (Button) findViewById(R.id.game_stats_button);
@@ -34,7 +33,10 @@ public class StartActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				Intent startGameIntent = new Intent(StartActivity.this, HungryBubblesActivity.class);
+				// Transition to the game screen by starting the HungryBubblesActivity
+				Intent startGameIntent = new Intent(StartActivity.this, 
+					HungryBubblesActivity.class);
+				
 				startActivity(startGameIntent);
 			}
 		});
@@ -44,9 +46,17 @@ public class StartActivity extends Activity
         	@Override
         	public void onClick(View v)
         	{
-        		// TODO: Navigate to the game stats screen (this requires that 
-        		// a game stats screen (xml layout file) and corresponding 
-        		// Activity to be created first 
+				// Transition to the game stats screen by starting the GameStatsActivity
+        		Intent viewStatsIntent = new Intent(StartActivity.this,
+        			GameStatsActivity.class);
+        		
+        		// startActivityForResult() is used instead of startActivity()
+        		// to allow the GameStatsActivity to navigate back to this 
+        		// activity by calling the finish() method (inherited from 
+        		// android.app.Activity) when the user is done viewing the
+        		// game statistics
+				startActivityForResult(viewStatsIntent, 
+					STATS_VIEW_REQUEST_CODE);
         	}
         });
         
@@ -55,12 +65,6 @@ public class StartActivity extends Activity
         	@Override
         	public void onClick(View v)
         	{
-        		// First ensure that all persistent game data gets stored
-        		// properly
-        		
-        		// TODO: Make the appropriate call on AppInfo to tell it to 
-        		// write all of its data to persistent storage
-        		
         		// Calls the finish method on StartActivity, which is a method
         		// inherited from the Activity class which declares an activity
         		// to be finished and causes it to be shutdown by Android

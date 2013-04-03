@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Canvas;
@@ -17,11 +16,14 @@ import android.view.View;
 
 /**
  * Manages the game logic.
+ * 
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
 public class GameBoard extends View
 {
+	// TODO: Uncomment or remove
 	// The maximum number of update requests which can be pending at one time
-	private static final int REQUEST_QUEUE_CAPACITY = 30;
+	//private static final int REQUEST_QUEUE_CAPACITY = 30;
 
 	// The maximum amount of time that the UI thread will wait
 	// when attempting to get exclusive access to the current
@@ -37,6 +39,7 @@ public class GameBoard extends View
 
 	private static final int SMALLER_THAN_PLAYER_COLOR = Color.BLUE;
 	private static final int LARGER_THAN_PLAYER_COLOR = Color.RED;
+	private static final int BUBBLE_STARTING_COLOR = Color.WHITE;
 	
 	private HungryBubblesActivity hostActivity;
 	private BubbleData playerData;
@@ -45,19 +48,21 @@ public class GameBoard extends View
 	// Responsible for continuously starting new opponent BubbleThreads 
 	// throughout the game
 	private BubbleFactory bubbleFactory;
-	private Thread bubbleFactoryThread;
+	
+	// The AppInfo instance which represents the application and manages
+	// general game statistics and information
+	private AppInfo appInfoInstance;
 	
 	// TODO: Uncomment or remove
 	//private BlockingQueue<UpdateRequest> updateRequests;
+	
 	private NonBlockingReadQueue<UpdateRequest> updateRequests;
 	
-	private static int screenWidth;
-
-	private static int screenHeight;
-
-	private static int boardWidth;
-
-	private static int boardHeight;
+	private int screenWidth;
+	private int screenHeight;
+	private int boardWidth;
+	private int boardHeight;
+	
 	private boolean initialized;
 	private boolean playerAlive;
 	
@@ -71,7 +76,7 @@ public class GameBoard extends View
 	// finger
 	private boolean playerTouchActive; 
 	
-	private GameBoard(HungryBubblesActivity hostActivity)
+	public GameBoard(HungryBubblesActivity hostActivity)
 		throws IllegalArgumentException
 	{
 		// The host activity serves as the Context for this view
@@ -80,6 +85,8 @@ public class GameBoard extends View
 		GameUtils.throwIfNull("hostActivity", "GameBoard", hostActivity);
 		
 		this.hostActivity = hostActivity;
+
+		appInfoInstance = (AppInfo) hostActivity.getApplication();
 		
 		// Player is considered to be alive until it is eaten by another bubble
 		// even though the player's game piece has not been initialized yet;
@@ -122,10 +129,12 @@ public class GameBoard extends View
 		if(playerAlive)
 		{
 			message = WIN_MESSAGE;
+			appInfoInstance.endGame(true);
 		}
 		else
 		{
 			message = LOSE_MESSAGE;
+			appInfoInstance.endGame(false);
 		}
 		
 	    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getContext());
@@ -187,13 +196,17 @@ public class GameBoard extends View
 			playerData = new BubbleData(Color.BLACK, playerX, playerY,
 				AppInfo.PLAYER_STARTING_RADIUS);
 			
+			this.bubbleFactory = new BubbleFactory(updateRequests, 
+				screenHeight, screenWidth, AppInfo.MAX_RADIUS);
+			
 			initialized = true;
 			playerAlive = true;
 		}
 
 		applyUpdates();
-		resolveConflicts();
+		resolveCollisions();
 		updateBubbleColors();
+		startBubbleIfAppropriate();
 		
 		if(!playerAlive)
 		{
@@ -205,7 +218,7 @@ public class GameBoard extends View
 			drawOppponents(canvas);
 		}
 	}
-	
+
 	/**
 	 * Handles a the {@link MotionEvent} generated as a result of a player 
 	 * touch interaction.
@@ -220,6 +233,8 @@ public class GameBoard extends View
 	@Override
 	public boolean onTouchEvent(MotionEvent e)
 	{
+		super.onTouchEvent(e);
+		
 		int eventAction = e.getAction();
 		boolean eventHandled = false;
 		
@@ -252,12 +267,12 @@ public class GameBoard extends View
 		return screenHeight;
 	}
 	
-	public static int getBoardWidth()
+	public int getBoardWidth()
 	{
 		return boardWidth;
 	}
 	
-	public static int getBoardHeight()
+	public int getBoardHeight()
 	{
 		return boardHeight;
 	}
@@ -401,12 +416,14 @@ public class GameBoard extends View
 		return true;
 	}
 	
+	// TODO: Remove
 	/**
 	 * Sets the {@link BubbleFactory} to be used by this {@code GameBoard} to
 	 * start new {@link BubbleThreads}, each of which represents a different
 	 * opponent bubble, and starts that {@link BubbleFactory} running in its
 	 * own {@link Thread}. 
 	 */
+	/*
 	private void setAndStartFactory(BubbleFactory bubbleFactory)
 	{
 		this.bubbleFactory = bubbleFactory;
@@ -415,6 +432,7 @@ public class GameBoard extends View
 		// TODO: Uncomment once BubbleFactory is actually implemented
 		//bubbleFactoryThread.start();
 	}
+	*/
 
 	/**
 	 * Goes through all of the "bubbles" which are currently active in the game
@@ -425,7 +443,7 @@ public class GameBoard extends View
 	 * non-deterministic (i.e. one of the bubbles will eat the other, but there
 	 * is no guarantee which one it will be). 
 	 */
-	private void resolveConflicts()
+	private void resolveCollisions()
     {
 		List<BubbleThread> deadThreads = new ArrayList<BubbleThread>();
 		
@@ -455,7 +473,9 @@ public class GameBoard extends View
 		
 		for(BubbleThread bubbleThread: deadThreads)
 		{
-			// TODO: Figure out how to stop the BubbleThreads that have been "eaten"
+			// Tell the BubbleThread that it was "eaten" and then remove it 
+			// from the collection of active bubbles 
+			bubbleThread.wasEaten();
 			opponentData.remove(bubbleThread);
 		}
 		
@@ -503,8 +523,11 @@ public class GameBoard extends View
 		
 		for(Integer index: deadThreadIndices)
 		{
-			// TODO: Figure out how to stop the BubbleThreads that have been "eaten"
-			opponentData.remove((BubbleThread) bubbleThreads[index]);
+			// Tell the BubbleThread that it was "eaten" and then remove it 
+			// from the collection of active bubbles
+			BubbleThread bubbleThread = (BubbleThread) bubbleThreads[index];
+			bubbleThread.wasEaten();
+			opponentData.remove(bubbleThread);
 		}
     }
 
@@ -516,9 +539,33 @@ public class GameBoard extends View
     {
 		try
         {
-	        List<UpdateRequest> updatesToApply = updateRequests.nonblockingPop(MAX_UPDATE_WAIT_TIME);
+	        List<UpdateRequest> updatesToApply = 
+	        	updateRequests.nonblockingPop(MAX_UPDATE_WAIT_TIME);
+	        
+	        if(updatesToApply == null || updatesToApply.size() == 0)
+	        {
+	        	// TODO: Remove
+	        	Log.d(TAG, "No updates to apply.");
+	        	//
+	        	
+	        	return;
+	        }
+	        
+        	// TODO: Remove
+        	Log.d(TAG, "Applying updates.");
+        	//
+	        
 	        for(UpdateRequest request: updatesToApply)
 	        {
+	        	if(!opponentData.containsKey(request.getRequester()))
+	        	{
+	        		// If the BubbleThread making the request for a UI update 
+	        		// is not contained in the opponentData map then the bubble
+	        		// controlled by that thread must have been eaten and this
+	        		// UI update request should be skipped
+	        		continue;
+	        	}
+	        	
 	        	opponentData.put(request.getRequester(), request.getNewPosition());
 	        }
 	        
@@ -554,6 +601,21 @@ public class GameBoard extends View
 			}
 			
 			opponentData.put(bubbleThread, recoloredBubbleData);
+		}
+	}
+	
+	/**
+	 * Checks a number of different conditions including the number of opponent
+	 * bubbles which are currently active to determine whether or not another 
+	 * bubble should be added, and if it is determined that conditions are 
+	 * appropriate for adding another opponent bubble to the game then one will
+	 * be started using the {@code GameBoard}'s {@link BubbleFactory} instance.
+	 */
+	private void startBubbleIfAppropriate()
+	{
+		if(opponentData.size() < AppInfo.MAX_BUBBLES)
+		{
+			bubbleFactory.startNewBubble(BUBBLE_STARTING_COLOR);
 		}
 	}
 	
@@ -633,6 +695,7 @@ public class GameBoard extends View
 		}
     }
 	
+	// TODO: Remove
 	/**
 	 * Factory method for initializing a {@code GameBoard} object, including 
 	 * starting all active components (threads) which the board uses to drive
@@ -643,13 +706,11 @@ public class GameBoard extends View
 	 *  
 	 * @return	A fully initialized and active {@code GameBoard}.
 	 */
+	/*
 	public static GameBoard makeActiveGameBoard(HungryBubblesActivity hostActivity)
 	{
-		// TODO: Resolve the double-reference issue by sharing a Java-synchronized queue of UpdateRequests
-		// => Make sure that this is actually working
 		GameBoard board = new GameBoard(hostActivity);
-		board.setAndStartFactory(new BubbleFactory(board.updateRequests));
-		//board.setFactory(new BubbleFactory(board));
 		return board;
 	}
+	*/
 }

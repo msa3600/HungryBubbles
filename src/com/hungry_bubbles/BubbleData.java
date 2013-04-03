@@ -5,7 +5,7 @@ package com.hungry_bubbles;
  * state to allow for safe sharing of BubbleData object among different 
  * threads.
  * 
- * @author Timothy Heard
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
 public class BubbleData
 {
@@ -50,6 +50,19 @@ public class BubbleData
 	    return a * a > (dx * dx + dy * dy);
 	}
 	
+	/**
+	 * Add the two bubbles represented by the given {@code BubbleData} objects
+	 * and return the resulting radius. 
+	 */
+	public static int addAreas(BubbleData bubble1, BubbleData bubble2)
+	{
+		double area1 = Math.PI * Math.pow(bubble1.getRadius(), 2);
+		double area2 = Math.PI * Math.pow(bubble2.getRadius(), 2);
+		double combinedArea = area1 + area2;
+		
+		return (int) Math.sqrt(combinedArea / Math.PI);
+	}
+	
 	public static BubbleData consume(BubbleData consumer, BubbleData victim)
 	{
 		// If the given bubble information indicates that the other bubble 
@@ -59,8 +72,7 @@ public class BubbleData
 			return null;
 		}
 		
-		return new BubbleData(consumer.getColor(), consumer.getX(), 
-			consumer.getY(), (consumer.getRadius()+ victim.getRadius()));
+		return updateRadius(consumer, addAreas(consumer, victim));
 	}
 
 	public static BubbleData updateColor(BubbleData bubble, int newColor)
@@ -92,4 +104,19 @@ public class BubbleData
     {
 		return new BubbleData(bubble.getColor(), x, y, bubble.getRadius());
     }
+
+	public static BubbleData move(BubbleData bubble, int angleOfMotion, int distance)
+	{
+		// Opposite over hypotenuse 
+		double sine = Math.sin(Math.toRadians(angleOfMotion));
+		
+		// Adjacent over hypotenuse 
+		double cosine = Math.cos(Math.toRadians(angleOfMotion));
+		
+		// Note that the hypotenuse is equal to the distance parameter
+		int changeInX = (int) (cosine * distance);
+		int changeInY = (int) (sine * distance);
+		
+		return updatePosition(bubble, bubble.getX() + changeInX, bubble.getY() + changeInY);
+	}
 }

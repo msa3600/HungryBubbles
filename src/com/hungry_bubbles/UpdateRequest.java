@@ -4,7 +4,7 @@ package com.hungry_bubbles;
  * POJO (Plain Old Java Object) representation of a request to update the
  * position of a bubble.
  * 
- * @author Timothy Heard
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
 public class UpdateRequest
 {
@@ -17,8 +17,13 @@ public class UpdateRequest
 		this.newPosition = newPosition;
 	}
 
-	// TODO: Be aware of the fact that this will result in a mutable reference
-	// to the BubbleThread who is requesting the position update to escape
+	/**
+	 * Returns a reference to the {@link BubbleThread} which initiated this 
+	 * {@code UpdateRequest}. Be aware of the fact that the caller is taking
+	 * on shared ownership of this {@link BubbleThread} upon calling this
+	 * method as the caller will have a mutable reference to the 
+	 * {@link BubbleThread} which made the position update request.
+	 */
 	public BubbleThread getRequester()
 	{
 		return requester;

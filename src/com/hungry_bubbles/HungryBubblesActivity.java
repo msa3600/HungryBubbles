@@ -6,6 +6,11 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
+/**
+ * The {@link Activity} subclass which represents the game screen.
+ * 
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
+ */
 public class HungryBubblesActivity extends Activity {
 	private GameBoard gameBoard;
 
@@ -23,7 +28,7 @@ public class HungryBubblesActivity extends Activity {
 	
 	public void startGame()
 	{
-        gameBoard = GameBoard.makeActiveGameBoard(this);
+        gameBoard = new GameBoard(this);
         
         LinearLayout layout = (LinearLayout) findViewById(R.id.main_layout);  
         layout.removeAllViews();

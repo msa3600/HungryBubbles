@@ -6,16 +6,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import android.util.Log;
+
 /**
  * A special queue implementation which allows for items to be popped off of 
  * the front while elements are being added.
  * 
- * @author Timothy Heard
+ * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
 public class NonBlockingReadQueue<T>
 {
 	private Lock queueLock;
 	private LockingNode<T> head, tail;
+	private static final String TAG = null;
 	
 	public NonBlockingReadQueue()
 	{
@@ -75,10 +78,10 @@ public class NonBlockingReadQueue<T>
 	 * 
 	 * @return	A {@link List} of values which could be obtained without 
 	 * 			blocking for longer than {@code timeInMilliseconds} 
-	 * 			milliseconds. Will be null if the queue could not be accessed
-	 * 			within the specified amount of time or an empty list if the
-	 * 			queue could be accessed but either the queue is empty or no
-	 * 			elements within the queue could be reached without blocking.
+	 * 			milliseconds. Will be {@code null} if the queue could not be 
+	 * 			accessed within the specified amount of time or an empty list
+	 * 			if the queue could be accessed but either the queue is empty or
+	 * 			no elements within the queue could be reached without blocking.
 	 * 
 	 * @throws InterruptedException		If an {@link InterruptedException}
 	 * 									is thrown while attempting to gain
@@ -157,7 +160,15 @@ public class NonBlockingReadQueue<T>
 		
 		public void unlockNode()
 		{
-			nodeLock.unlock();
+			try
+			{
+				nodeLock.unlock();
+			}
+			catch(IllegalMonitorStateException e)
+			{
+				Log.d(TAG, "IllegalMonitorStateException thrown whille " + 
+					"attempting to add element to the NonBlockingReadQueue");
+			}
 		}
 	}
 }

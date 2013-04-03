@@ -30,6 +30,12 @@
             android:label="@string/app_name"
             android:screenOrientation="landscape" >
         </activity>
+        
+        <activity
+            android:name=".GameStatsActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+        </activity>
     </application>
 
 </manifest>
