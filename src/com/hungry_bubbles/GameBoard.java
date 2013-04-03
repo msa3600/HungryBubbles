@@ -184,9 +184,6 @@ public class GameBoard extends View
 		for(BubbleThread thread: opponentData.keySet())
 		{
 			thread.stopThread();
-			
-			// TODO: Remove
-			//thread.stop();
 		}
 		
 		String message;
