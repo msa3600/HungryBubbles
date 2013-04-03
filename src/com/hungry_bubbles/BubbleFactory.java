@@ -60,15 +60,12 @@ public class BubbleFactory
 		 // update color
 		BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
 		 
-		 if (Range_Size > AppInfo.PLAYER_STARTING_RADIUS)
-		 {
-			BubbleData.updateColor( bubble  , Color.RED);
-		 }
-		 
-		 if (Range_Size < AppInfo.PLAYER_STARTING_RADIUS)
-		 {
-			 BubbleData.updateColor( bubble  , Color.BLUE);
-		 }
+		 if (Range_Size > AppInfo.PLAYER_STARTING_RADIUS){
+				BubbleData.updateColor( bubble  , Color.RED);
+			 	}
+			 if (Range_Size < AppInfo.PLAYER_STARTING_RADIUS){
+				 BubbleData.updateColor( bubble  , Color.BLUE);
+				 }
 		 */
 	}
 	
