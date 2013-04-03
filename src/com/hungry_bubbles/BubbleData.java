@@ -1,7 +1,5 @@
 package com.hungry_bubbles;
 
-import android.util.Log;
-
 /**
  * Thread-safe representation of a "bubble" in the game which uses immutable
  * state to allow for safe sharing of BubbleData object among different 
@@ -83,6 +81,13 @@ public class BubbleData
 		return (int) Math.sqrt(combinedArea / Math.PI);
 	}
 	
+	/**
+	 * Returns a new {@code BubbleData} object which has the area of the 
+	 * {@code victim} bubble added to the area of the {@code consumer}
+	 * bubble, with all of the other bubble properties (x/y coordinates,
+	 * color, and angle of motion) will be the same as the {@code consumer}'s
+	 * current values for those properties.
+	 */
 	public static BubbleData consume(BubbleData consumer, BubbleData victim)
 	{
 		// If the given bubble information indicates that the other bubble 
@@ -147,15 +152,6 @@ public class BubbleData
 		// Note that the hypotenuse is equal to the distance parameter
 		float changeInX = (float) (cosine * distance);
 		float changeInY = (float) (sine * distance);
-		
-		// TODO: Remove
-		/*
-		Log.d("temp", "Moved bubble from (" + bubble.getX() + ", " + 
-			bubble.getY() + ") to (" + (bubble.getX() + changeInX) + ", " +
-			(bubble.getY() + changeInY) + ") at an agle of " + angleOfMotion +
-			" and distance of " + distance);
-			*/
-		//
 		
 		return updatePosition(bubble, bubble.getX() + changeInX, bubble.getY() + changeInY);
 	}

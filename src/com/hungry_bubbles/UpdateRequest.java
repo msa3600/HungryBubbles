@@ -11,6 +11,10 @@ public class UpdateRequest
 	private final BubbleThread requester;
 	private final BubbleData newPosition;
 	
+	/**
+	 * Create a new {@code UpdateRequest} with the given {@code requester}
+	 * and {@code newPosition}.
+	 */
 	public UpdateRequest(BubbleThread requester, BubbleData newPosition)
 	{
 		this.requester = requester;
@@ -29,6 +33,12 @@ public class UpdateRequest
 		return requester;
 	}
 
+	/**
+	 * Get the position the requester wants to move its bubble to.
+	 * 
+	 * @return	The {@link BubbleData} object which represents the position
+	 * 			the requester wants to move their bubble to.
+	 */
 	public BubbleData getPosition()
 	{
 		return newPosition;

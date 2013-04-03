@@ -6,11 +6,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import android.util.Log;
-
 /**
  * A special queue implementation which allows for items to be popped off of 
- * the front while elements are being added.
+ * the front while elements are being added to minimize how long readers
+ * must block for when attempting to read data.
  * 
  * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
@@ -18,7 +17,6 @@ public class NonBlockingReadQueue<T>
 {
 	private Lock queueLock;
 	private LockingNode<T> head, tail;
-	private static final String TAG = null;
 	
 	public NonBlockingReadQueue()
 	{
@@ -27,6 +25,11 @@ public class NonBlockingReadQueue<T>
 		tail = null;
 	}
 	
+	/**
+	 * Insert a new item at the end of the queue.
+	 * 
+	 * @param 	value	The item to insert.
+	 */
 	public void put(T value)
 	{
 		queueLock.lock();
@@ -49,6 +52,12 @@ public class NonBlockingReadQueue<T>
 		}
 	}
 	
+	/**
+	 * Remove and return an item from the front of the queue.
+	 * 
+	 * @return	The first item in the queue or {@code null} if the queue is 
+	 * 			empty.
+	 */
 	public T pop()
 	{
 		queueLock.lock();
@@ -114,6 +123,9 @@ public class NonBlockingReadQueue<T>
 		return null;
 	}
 	
+	/**
+	 * A node in the queue which can be independently locked. 
+	 */
 	private class LockingNode<E>
 	{
 		private Lock nodeLock;
@@ -160,14 +172,9 @@ public class NonBlockingReadQueue<T>
 		
 		public void unlockNode()
 		{
-			try
+			if(Thread.holdsLock(nodeLock))
 			{
 				nodeLock.unlock();
-			}
-			catch(IllegalMonitorStateException e)
-			{
-				Log.d(TAG, "IllegalMonitorStateException thrown whille " + 
-					"attempting to add element to the NonBlockingReadQueue");
 			}
 		}
 	}

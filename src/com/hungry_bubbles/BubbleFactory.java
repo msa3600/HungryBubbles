@@ -3,38 +3,52 @@ package com.hungry_bubbles;
 import java.util.Random;
 
 import android.os.Handler;
-import android.util.Log;
-
 
 /**
  * Factory class for the creation of new BubbleThreads with random bubble
- * starting positions around the outside of the screen in the virtual 
- * padding area.
+ * starting positions and size around the outside of the screen in the 
+ * virtual padding area.
  * 
  * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
 public class BubbleFactory
 {
+	private static final String TAG = "BubbleFactory";
+	
 	private enum SIDE {LEFT, RIGHT, TOP, BOTTOM}
 
 	private static final int LEFT_ANGLE_OF_MOTION = 0;
 	private static final int RIGHT_ANGLE_OF_MOTION = 180;
 	private static final int TOP_ANGLE_OF_MOTION = 270;
-	private static final int BOTTOM_ANGLE_OF_MOTION = 90;;
-	
-	// TODO: Only use one of these
-	private NonBlockingReadQueue<UpdateRequest> updatesQueue;
+	private static final int BOTTOM_ANGLE_OF_MOTION = 90;
+
+	// A handle which references the GameBoard's built-in message queue 
+	// provided by the Android OS; this handle is used by the BubbleThreads
+	// created by the BubbleFactory to submit position update requests to the
+	// GameBoard so that they can be rendered and displayed to the user
 	private Handler messageHandler;
 	
 	private int screenHeight, screenWidth, virtualPadding;
 	private Random random;
 	
-	//public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests, 
-		//int screenHeight , int screenWidth, int virtualPadding)	
+	/**
+	 * Create a new BubbleFactory object.
+	 * 
+	 * 
+	 * @param messageHandler	A {@link Handler} which will be used to send 
+	 * 							position update requests to the game board
+	 * 
+	 * @param screenWidth		The width of the physical screen
+	 * 	
+	 * @param screenHeight		The height of the physical screen
+	 * 
+	 * @param virtualPadding	The amount of conceptual padding which 
+	 * 							surrounds the physical screen to form the 
+	 * 							complete game surface
+	 */
 	public BubbleFactory(Handler messageHandler, 
 			int screenHeight , int screenWidth, int virtualPadding)	
 	{
-		//this.updatesQueue = updateRequests;
 		this.messageHandler = messageHandler;
 		this.screenHeight = screenHeight;
 		this.screenWidth = screenWidth;
@@ -43,10 +57,27 @@ public class BubbleFactory
 		random = new Random(); 
 	}
 	
-	public UpdateRequest makeNewBubble(int color)
+	/**
+	 * Creates a new {@link UpdateRequest} which represents a request to add
+	 * a bubble with the characteristics represented by the {@link BubbleData}
+	 * which is encapsulated in the returned {@link UpdateRequest} whose motion
+	 * is controlled by the {@link BubbleThread} which is also encapsulated in 
+	 * the returned {@link UpdateRequest}.
+	 * 
+	 * @param 	color		The integer code which represents the starting 
+	 * 						color of the bubble being created.
+	 * 
+	 * @param	maxRadius	The upper limit on the radius of the bubble to be
+	 * 						created.
+	 * 
+	 * @return	A {@link UpdateRequest} containing a {@link BubbleData} which 
+	 * 			characterizes the new bubble and a {@link BubbleThread} which
+	 * 			will control the new bubble's motion.
+	 */
+	public UpdateRequest makeNewBubble(int color, int maxRadius)
 	{
 		SIDE side = pickRandomSide();
-		BubbleData bubbleData = initRandomBubble(side, color);
+		BubbleData bubbleData = initRandomBubble(side, color, maxRadius);
 		
 		BubbleThread bubbleThread = new BubbleThread(messageHandler, bubbleData, 
 			screenWidth, screenHeight, virtualPadding); 
@@ -54,6 +85,9 @@ public class BubbleFactory
 		return new UpdateRequest(bubbleThread, bubbleData);
 	}
 	
+	/**
+	 * Pick a random side of the board for the bubble to spawn on.
+	 */
 	private SIDE pickRandomSide()
 	{
 		SIDE randomSide;
@@ -78,21 +112,33 @@ public class BubbleFactory
 	
 	/**
 	 * Creates and returns the data for a random bubble with the given 
-	 * {@code color} which will have a radius between AppInfo.MIN_RADIUS and 
-	 * AppInfo.MAX_RADIUS and a starting position within the virtual padding
-	 * area surrounding the physical screen to whichever side of the screen
-	 * is indicated by the {@code side} parameter in order to prevent the 
+	 * {@code color} which will have a radius greater than AppInfo.MIN_RADIUS
+	 * and either {@code maxRadius} or AppInfo.MAX_RADIUS (whichever is 
+	 * smaller) and a starting position within the virtual padding area
+	 * surrounding the physical screen to whichever side of the screen is
+	 * indicated by the {@code side} parameter in order to prevent the 
 	 * bubble from appearing on top of the player's bubble.
+	 * 
+	 * @throws IllegalArgumentException	If the provided {@code maxRadius}
+	 * value is less than AppInfo.MIN_RADIUS.
 	 */
-	private BubbleData initRandomBubble(SIDE side, int color)
+	private BubbleData initRandomBubble(SIDE side, int color, int maxRadius)
+		throws IllegalArgumentException
 	{
+		GameUtils.throwIfLessThan(TAG, "maxRadius", maxRadius, AppInfo.MIN_RADIUS);
+		
 		// Generate a random starting radius from AppInfo.MIN_RADIUS to 
-		// AppInfo.MAX_RADIUS, with the call to random.nextInt() returning a
-		// pseudo-random integer from 0 (inclusive to 
-		// AppInfo.MAX_RADIUS - AppInfo.MIN_RADIUS (exclusive), which is why
+		// the effective maximum radius (either AppInfo.MAX_RADIUS or maxRadius
+		// -whichever is smaller), with the call to random.nextInt() returning 
+		// a pseudo-random integer from 0 (inclusive) to effectiveMaxRadius 
+		// minus AppInfo.MIN_RADIUS (exclusive), which is why 
 		// AppInfo.MIN_RADIUS must be added to arrive a value between 
-		// AppInfo.MIN_RADIUS and AppInfo.MAX_RADIUS
-		int radius = random.nextInt(AppInfo.MAX_RADIUS - AppInfo.MIN_RADIUS) + 
+		// AppInfo.MIN_RADIUS and effectiveMaxRadius
+		
+		int effectiveMaxRadius = maxRadius < AppInfo.MAX_RADIUS ? maxRadius : 
+			AppInfo.MAX_RADIUS;
+		
+		int radius = random.nextInt(effectiveMaxRadius - AppInfo.MIN_RADIUS) + 
 			AppInfo.MIN_RADIUS;
 		
 		float startX, startY;

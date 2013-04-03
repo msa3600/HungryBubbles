@@ -11,9 +11,14 @@ import android.widget.LinearLayout;
  * 
  * @author Timothy Heard, Shaun DeVos, John O'Brien, Mustafa Al Salihi
  */
-public class HungryBubblesActivity extends Activity {
+public class HungryBubblesActivity extends Activity
+{
 	private GameBoard gameBoard;
 
+	/**
+	 * Android application lifecycle method which is called when the activity 
+	 * is first created.
+	 */
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);  
@@ -26,6 +31,11 @@ public class HungryBubblesActivity extends Activity {
         startGame();
     }
 	
+	/**
+	 * Android application lifecycle method which is called whenever the 
+	 * activity is restarted after being stopped (i.e. the app is no longer
+	 * visible to the user).
+	 */
 	@Override
 	public void onRestart()
 	{
@@ -33,13 +43,22 @@ public class HungryBubblesActivity extends Activity {
 		gameBoard.resume();
 	}
 	
+	/**
+	 * Android application lifecycle method which is called whenever the 
+	 * activity is paused (app is inactive but still visible).
+	 */
 	@Override
 	public void onPause()
 	{
 		super.onPause();
 		gameBoard.suspend();
 	}
-	
+
+	/**
+	 * Android application lifecycle method which is called whenever the 
+	 * activity is destroyed (the app is completely shut down and all of
+	 * its resources are released).
+	 */
 	@Override
 	public void onDestroy()
 	{
@@ -47,6 +66,9 @@ public class HungryBubblesActivity extends Activity {
 		gameBoard.stop();
 	}
 	
+	/**
+	 * Starts a new game.
+	 */
 	public void startGame()
 	{
         gameBoard = new GameBoard(this);
@@ -56,6 +78,9 @@ public class HungryBubblesActivity extends Activity {
         layout.addView(gameBoard);
 	}
 	
+	/**
+	 * Stop playing the game and transition back to the start screen.
+	 */
 	public void quit()
 	{
 		finish();

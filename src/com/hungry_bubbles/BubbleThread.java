@@ -20,33 +20,56 @@ public class BubbleThread extends Thread
 	
 	// "Tag" used for logging information and events within this class, such as
 	// the absence if invalid constructor arguments are provided 
-	private static final String TAG = "updatesQueue";
+	private static final String TAG = "BubbleThread";
 	
-	// TODO: Update comment
-	// Shared data structure used to submit position update requests which will
-	// then be read by the GameBoard and rendered
+	// A handle which references the GameBoard's built-in message queue 
+	// provided by the Android OS; this handle is used to submit position
+	// update requests to the GameBoard so that they can be rendered and
+	// displayed to the user
 	private Handler messageHandler;
-	
+
+	// Encapsulates the state of the bubble controlled by this BubbleThread
 	private BubbleData bubbleData;
+	
+	// The dimensions of the physical screen
 	private int screenWidth, screenHeight;
 	
-	// TODO: Add comment
+	// The amount of conceptual padding which surrounds the physical screen and
+	// serves as a spawning area for new bubbles
 	private int virtualPadding;
 	
 	// Keeps track of whether or not this bubble has been "eaten" by another
 	// bubble
 	private boolean eaten;
 
+	/**
+	 * Create a new BubbleThread.
+	 * 
+	 * @param messageHandler	A {@link Handler} which will be used to send 
+	 * 							position update requests to the game board
+	 * 
+	 * @param startingData		The starting properties of the bubble which 
+	 * 							will be controlled by this BubbleThread
+	 * 
+	 * @param screenWidth		The width of the physical screen
+	 * 	
+	 * @param screenHeight		The height of the physical screen
+	 * 
+	 * @param virtualPadding	The amount of conceptual padding which 
+	 * 							surrounds the physical screen to form the 
+	 * 							complete game surface
+	 *  
+	 * @throws IllegalArgumentException		If the provided 
+	 * {@code messageHandler} or {@code startingData} objects are {@code null}.
+	 */
 	public BubbleThread(Handler messageHandler, 
-			BubbleData startingData, int screenWidth, 
-			int screenHeight, int virtualPadding)
+		BubbleData startingData, int screenWidth, 
+		int screenHeight, int virtualPadding)
 		throws IllegalArgumentException
 	{
-		//GameUtils.throwIfNull(TAG, "updatesQueue", updatesQueue);
 		GameUtils.throwIfNull(TAG, "messageHandler", messageHandler);
 		GameUtils.throwIfNull(TAG, "startingData", startingData);
 		
-		//this.updatesQueue = updatesQueue;
 		this.messageHandler = messageHandler;
 		this.bubbleData = startingData;
 		this.screenWidth = screenWidth;
@@ -63,8 +86,6 @@ public class BubbleThread extends Thread
 	@Override
 	public void run()
 	{
-		// TODO: Implement changes to bubble's angle of motion
-		
 		while(true)
 		{
 			synchronized(this)
@@ -92,9 +113,6 @@ public class BubbleThread extends Thread
 			
 			this.bubbleData = newPosition;
 			
-			// TODO
-			//updatesQueue.put(new UpdateRequest(this, newPosition));
-			
 			Message updateMessage = new Message();
 			updateMessage.obj = new UpdateRequest(this, newPosition);
 			messageHandler.sendMessage(updateMessage);
@@ -102,12 +120,33 @@ public class BubbleThread extends Thread
 			try
 			{
 				sleep(SLEEP_TIME);
-			} catch (InterruptedException e)
+			} 
+			catch (InterruptedException e)
 			{
 				Log.e(TAG, "InterruptedException occurred in BubbleThread.run()");
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Notifies this {@code BubbleThread} that is has been eaten, which results
+	 * in the thread execution loop being terminated.
+	 */
+	public void wasEaten()
+	{
+		synchronized(this)
+		{
+			eaten = true;
+		}
+	}
+	
+	/**
+	 * Causes thread execution to stop.
+	 */
+	public void stopThread()
+	{
+		this.wasEaten();
 	}
 	
 	/**
@@ -122,21 +161,8 @@ public class BubbleThread extends Thread
 		float y = position.getY();
 		int radius = position.getRadius();
 		
-		return !((x - radius < 0) || (x + radius > screenWidth + (2 * virtualPadding)) ||
-				(y - radius < 0) || (y + radius) > screenHeight + (2 * virtualPadding));
-	}
-
-	public void wasEaten()
-	{
-		synchronized(this)
-		{
-			eaten = true;
-		}
-	}
-	
-	public void stopThread()
-	{
-		this.wasEaten();
+		return !((x - radius < 0) || ((x + radius) > screenWidth + (2 * virtualPadding)) ||
+				 (y - radius < 0) || ((y + radius) > screenHeight + (2 * virtualPadding)));
 	}
 }
 
