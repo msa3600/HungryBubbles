@@ -14,6 +14,7 @@ public class AppInfo extends Application
 	public static final int MIN_RADIUS = 20; 
 	public static final int PLAYER_STARTING_RADIUS = 50;
 	public static final int PLAYER_TARGET_RADIUS = 80; 
+	public static final int PLAYER_STARTING_DIRECTION = 0;
 	public static final int MAX_BUBBLES = 4;
 	
 	private static final String GAME_DATA = "GAME_DATA";

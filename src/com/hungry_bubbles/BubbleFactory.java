@@ -48,36 +48,10 @@ public class BubbleFactory
 		SIDE side = pickRandomSide();
 		BubbleData bubbleData = initRandomBubble(side, color);
 		
-		int angleOfMotion = getAngleOfMotionFromSide(side);
-		
-		// TODO: Uncomment or remove
-		//BubbleThread bubbleThread = new BubbleThread(updatesQueue, bubbleData, 
-			//angleOfMotion, screenWidth, screenHeight, virtualPadding); 
-
 		BubbleThread bubbleThread = new BubbleThread(messageHandler, bubbleData, 
-				angleOfMotion, screenWidth, screenHeight, virtualPadding); 
+			screenWidth, screenHeight, virtualPadding); 
 		
 		return new UpdateRequest(bubbleThread, bubbleData);
-		
-		/* TODO: Remove
-		 int Max = AppInfo.MAX_RADIUS;
-		 int Min = AppInfo.MIN_RADIUS;
-		 int Range_Size = Min + (int)(Math.random() * ((Max - Min) + 1));
-		
-		 //  Virtual board
-		 int Y_Position = (int)(Math.random() * (AppInfo.MAX_RADIUS)); 
-		 int X_Position = (int)(Math.random() * (AppInfo.MAX_RADIUS));
-		
-		 // update color
-		BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
-		 
-		 if (Range_Size > AppInfo.PLAYER_STARTING_RADIUS){
-				BubbleData.updateColor( bubble  , Color.RED);
-			 	}
-			 if (Range_Size < AppInfo.PLAYER_STARTING_RADIUS){
-				 BubbleData.updateColor( bubble  , Color.BLUE);
-				 }
-		 */
 	}
 	
 	private SIDE pickRandomSide()
@@ -157,7 +131,8 @@ public class BubbleFactory
 				(virtualPadding / 2);
 		}
 		
-		return new BubbleData(color, startX, startY, radius);
+		return new BubbleData(color, startX, startY, radius, 
+			getAngleOfMotionFromSide(side));
 	}
 	
 	/**

@@ -44,29 +44,50 @@ public class GameBoard extends View
 	private static final int BUBBLE_STARTING_COLOR = Color.WHITE;
 	
 	private HungryBubblesActivity hostActivity;
+	
+	// Encapsulates the information needed to display the player's bubble
 	private BubbleData playerData;
+	
+	// Mapping of the BubbleThreads which are driving the movement of the
+	// opponent bubbles to the current location and display information 
+	// encapsulated in a BubbleData object for the bubble controlled by that 
+	// thread 
 	private Map<BubbleThread, BubbleData> opponentData;
+
+	// Keeps track of the information about the opponent bubbles which were on
+	// the board when the game was suspended through a call to 
+	// GameBoard.suspend()
+	private List<BubbleData> suspendedBubbles;
+	
+	// Keeps track of whether or not the game is currently suspended
+	private boolean suspended;
+	
+	// The number of opponent (non-player) bubbles which are currently active
+	// in the game
 	private int numOpponents;
 	
-	// Responsible for continuously starting new opponent BubbleThreads 
-	// throughout the game
+	// Used for creating new opponent BubbleThreads initialized with a random 
+	// bubble starting position around the outside of the board in a virtual
+	// border region used for spawning new opponent bubbles in order to
+	// prevent bubbles from being able to spawn on top of the player
 	private BubbleFactory bubbleFactory;
 	
 	// The AppInfo instance which represents the application and manages
 	// general game statistics and information
 	private AppInfo appInfoInstance;
 	
-	// TODO: Uncomment or remove
-	//private BlockingQueue<UpdateRequest> updateRequests;
-	
+	// TODO: Remove
 	private NonBlockingReadQueue<UpdateRequest> updateRequests;
 	
 	private Handler mHandler;
 	
-	private int screenWidth;
-	private int screenHeight;
-	private int boardWidth;
-	private int boardHeight;
+	// The dimensions of the physical screen (in pixels)
+	private int screenWidth, screenHeight;
+	
+	// The dimensions of the conceptual board space including an 
+	// AppInfo.MAX_RADIUS conceptual border around the physical screen used
+	// as a starting are for new opponent bubbles
+	private int boardWidth, boardHeight;
 	
 	private boolean initialized;
 	private boolean playerAlive;
@@ -79,7 +100,7 @@ public class GameBoard extends View
 	// Set to true whenever the player presses down on top of the player
 	// bubble piece and then set back to false when the player lifts their
 	// finger
-	private boolean playerTouchActive; 
+	private boolean playerTouchActive;
 	
 	public GameBoard(HungryBubblesActivity hostActivity)
 		throws IllegalArgumentException
@@ -101,8 +122,13 @@ public class GameBoard extends View
 		playerAlive = true;		
 		playerData = null;
 		
+		// The BubbleFactory constructor requires the dimensions of the 
+		// physical screen, which will not be available until the UI is drawn
+		// for the first time (see onDraw())
 		bubbleFactory = null;
+		
 		opponentData = new HashMap<BubbleThread, BubbleData>();
+		suspendedBubbles = new ArrayList<BubbleData>();
 		numOpponents = 0;
 		
 		// TODO: Remove this if NonBlockingReadQueue works
@@ -139,6 +165,7 @@ public class GameBoard extends View
 		
 		initialized = false;
 		playerTouchActive = false;
+		suspended = false;
 	}
 
 	/**
@@ -227,7 +254,8 @@ public class GameBoard extends View
 			float playerX = (screenWidth / 2) + AppInfo.MAX_RADIUS;
 			float playerY = (screenHeight / 2) + AppInfo.MAX_RADIUS; 
 			playerData = new BubbleData(Color.BLACK, playerX, playerY,
-				AppInfo.PLAYER_STARTING_RADIUS);
+				AppInfo.PLAYER_STARTING_RADIUS, 
+				AppInfo.PLAYER_STARTING_DIRECTION);
 			
 			// TODO
 			//this.bubbleFactory = new BubbleFactory(updateRequests, 
@@ -675,8 +703,6 @@ public class GameBoard extends View
 	 */
 	private void startBubbleIfAppropriate()
 	{
-		// TODO: Clean up
-		//if(opponentData.size() < AppInfo.MAX_BUBBLES)
 		if(numOpponents < AppInfo.MAX_BUBBLES)
 		{
 			UpdateRequest newBubbleInfo = 
@@ -775,6 +801,59 @@ public class GameBoard extends View
 			drawBubble(canvas, bubbleData);
 		}
     }
+
+	/**
+	 * Causes the game to be restarted from where it was when 
+	 * {@code GameBoard.suspend()} was called. If {@code GameBoard.suspend()}
+	 * has not been called between the creation of this {@code GameBoard} or
+	 * the last call to {@code resume()}, whichever one occurred more recently,
+	 * then calling this method will have no effect.  
+	 */
+	public void resume()
+	{
+		if(!suspended)
+		{
+			return;
+		}
+
+		while(!suspendedBubbles.isEmpty())
+		{
+			BubbleData bubble = suspendedBubbles.remove(0);
+			BubbleThread bubbleThread = new BubbleThread(mHandler, bubble, 
+				screenWidth, screenHeight, AppInfo.MAX_RADIUS);
+			
+			opponentData.put(bubbleThread, bubble);
+			numOpponents++;
+			bubbleThread.start();
+		}
+	}
+
+	/**
+	 * Causes all game activity to be suspended until {@code resume()} is
+	 * called. Calling {@code suspend()} multiple times without calling
+	 * {@code resume()} in between will have no effect after the first call.
+	 */
+	public void suspend()
+	{
+		if(suspended)
+		{
+			return;
+		}
+		
+		for(BubbleThread bubbleThread: opponentData.keySet())
+		{
+			suspendedBubbles.add(opponentData.get(bubbleThread));
+			bubbleThread.stop();
+		}
+		
+		suspended = true;
+	}
+
+	public void stop()
+	{
+		// TODO Auto-generated method stub
+		
+	}
 	
 	// TODO: Remove
 	/**

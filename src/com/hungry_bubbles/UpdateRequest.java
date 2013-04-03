@@ -29,6 +29,7 @@ public class UpdateRequest
 		return requester;
 	}
 
+	// TODO: change to getPosition()
 	public BubbleData getNewPosition()
 	{
 		return newPosition;

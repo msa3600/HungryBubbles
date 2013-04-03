@@ -35,7 +35,6 @@ public class BubbleThread extends Thread
 	
 	private BubbleData bubbleData;
 	private int screenWidth, screenHeight;
-	private int angleOfMotion;
 	private int virtualPadding;
 	private boolean eaten;
 
@@ -51,19 +50,17 @@ public class BubbleThread extends Thread
 		int screenHeight, int virtualPadding)
 		*/
 	public BubbleThread(Handler messageHandler, 
-			BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
+			BubbleData startingData, int screenWidth, 
 			int screenHeight, int virtualPadding)
 		throws IllegalArgumentException
 	{
 		//GameUtils.throwIfNull(TAG, "updatesQueue", updatesQueue);
 		GameUtils.throwIfNull(TAG, "messageHandler", messageHandler);
 		GameUtils.throwIfNull(TAG, "startingData", startingData);
-		GameUtils.throwIfInvalidAngle(TAG, "initialAngleOfMotion", initialAngleOfMotion);
 		
 		//this.updatesQueue = updatesQueue;
 		this.messageHandler = messageHandler;
 		this.bubbleData = startingData;
-		this.angleOfMotion = initialAngleOfMotion;
 		this.screenWidth = screenWidth;
 		this.screenHeight = screenHeight;
 		this.virtualPadding = virtualPadding;
@@ -91,15 +88,18 @@ public class BubbleThread extends Thread
 			}
 			
 			// Move the bubble
-			BubbleData newPosition = BubbleData.move(bubbleData, angleOfMotion, MOVE_INCREMENT);
+			BubbleData newPosition = BubbleData.move(bubbleData, MOVE_INCREMENT);
 			
 			if(!canMoveTo(newPosition))
 			{
 				// Reverse angle of motion
+				int angleOfMotion = bubbleData.getAngleOfMotion();
 				angleOfMotion = angleOfMotion >= 180 ? angleOfMotion - 180 : 
 					angleOfMotion + 180;
 				
-				newPosition = BubbleData.move(bubbleData, angleOfMotion, MOVE_INCREMENT);
+				newPosition = BubbleData.move(
+					BubbleData.updateAngleOfMotion(bubbleData, angleOfMotion), 
+					MOVE_INCREMENT);
 			}
 			
 			this.bubbleData = newPosition;

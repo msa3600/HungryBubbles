@@ -26,6 +26,27 @@ public class HungryBubblesActivity extends Activity {
         startGame();
     }
 	
+	@Override
+	public void onRestart()
+	{
+		super.onRestart();
+		gameBoard.resume();
+	}
+	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+		gameBoard.suspend();
+	}
+	
+	@Override
+	public void onDestroy()
+	{
+		super.onDestroy();
+		gameBoard.stop();
+	}
+	
 	public void startGame()
 	{
         gameBoard = new GameBoard(this);
