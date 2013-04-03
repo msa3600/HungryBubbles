@@ -10,6 +10,7 @@ import android.graphics.Color;
  */
 public class BubbleFactory implements Runnable
 {
+	private int  X_Position ,Y_Position , Range_Size ;
 	// TODO: Clean up
 	//private GameBoard gameBoard;
 	NonBlockingReadQueue<UpdateRequest> updatesQueue;
@@ -21,7 +22,7 @@ public class BubbleFactory implements Runnable
 	}
 	*/
 	
-	public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests, int Screen_Height , int Screen_Width, int Virtual_padding)
+	public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests, int screenHeight , int screenWidth, int virtualPadding)
 	
 	{
 		//this.gameBoard = gameBoard;
@@ -38,7 +39,7 @@ public class BubbleFactory implements Runnable
 		int X_Position = (int)(Math.random() * (AppInfo.MAX_RADIUS));
 		
 		 // update color
-		 BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
+		BubbleData bubble = new BubbleData(Color.BLACK, X_Position, Y_Position, Range_Size);
 		 
 		 if (Range_Size > AppInfo.PLAYER_STARTING_RADIUS){
 				BubbleData.updateColor( bubble  , Color.RED);

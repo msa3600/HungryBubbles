@@ -12,8 +12,10 @@ public class BubbleThread implements Runnable
 	// TODO: Clean up commmented out code
 	
 	private BubbleData bubbleData;
-	private static int X_Move , Y_Move ; 
-	private static int Value_Change = 5;
+	private  int X_Move , Y_Move ; 
+	private final static int Movement_Interval = 5;
+	private final static int Sleep_Time = 5 ;
+	boolean eaten; 
 	
 	/**
 	 * Creates a new BubbleThread with the given starting data.
@@ -31,8 +33,8 @@ public class BubbleThread implements Runnable
 	}
 	*/
 
-	public BubbleThread(BlockingQueue<UpdateRequest> updatesQueue, int color, float startX, 
-		float startY, int radius)
+	public BubbleThread(BlockingQueue<UpdateRequest> updatesQueue, int screenHeight , int screenWidth, int virtualPadding)
+	
 		throws IllegalArgumentException
 	{
 		GameUtils.throwIfNull("updatesQueue", "BubbleThread", updatesQueue);
@@ -44,16 +46,27 @@ public class BubbleThread implements Runnable
 	 */
 	@Override
 	public void run() {
-		// need the max and min value for the screen height and width 
-	/*
-		for (int i = 0; i < GameBoard.getScreenWidth()*2; i++){
-	//	X_Move = GameBoard.getScreenWidth()* (int)Math.random() + Value_Change ;
-	//	} 
-	//for ( int i = 0 ; i <GameBoard.getScreenHeight()*2; i++ ){
-	//Y_Move = GameBoard.getScreenHeight() * (int)Math.random() + Value_Change;*/
+		
+	
+		
+		while (true){
+		int bubbleRadius = bubbleData.getRadius();
+		float minX = 0 + bubbleRadius;
+		float minY = 0 + bubbleRadius;
+		float maxX = screenWidth - bubbleRadius;
+		float maxY = screenHeight - bubbleRadius;
+		
+		while (X_Move + bubbleData.getRadius() && Y_Move + bubbleData.getRadius() < screenWidth && screenHeight ){
+		X_Move = Movement_Interval + (int)Math.random();
+		Y_Move = Movement_Interval + (int)Math.random();
 		}
 		
-		//bubbleData = (color , X_Move , Y_Move, radius);
+		Thread.sleep(Sleep_Time);
+		}
+	//	bubbleData = (color , Y_Move , Y_Move, radius);
+		}
+	
+		
 		
 		// TODO Auto-generated method stub
 
@@ -64,6 +77,22 @@ public class BubbleThread implements Runnable
 		// as a constant) and go with that for now (5 would be my best guess)
 		
 		// updatesQueue.put(newPosition);
+	
+		
+	
+	/*
+	 *  Check if bubbles that have the same coordinates,if true check for  
+	 *  different radius and mark one with smaller radius as eaten  (kill bubble)
+	 */
+	public void wasEaten(){
+		
+		
+		synchronized(this){
+
+			eaten=true;
+			
+		}
 	}
+}
 
 
