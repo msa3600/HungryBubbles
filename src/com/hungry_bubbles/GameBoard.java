@@ -181,7 +181,7 @@ public class GameBoard extends View
 		// Stop all active threads
 		for(BubbleThread thread: opponentData.keySet())
 		{
-			thread.stop();
+			//thread.stop();
 		}
 		
 		String message;
