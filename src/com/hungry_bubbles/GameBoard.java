@@ -51,7 +51,13 @@ public class GameBoard extends View
 	//private BlockingQueue<UpdateRequest> updateRequests;
 	private NonBlockingReadQueue<UpdateRequest> updateRequests;
 	
-	private int screenWidth, screenHeight, boardWidth, boardHeight;
+	private static int screenWidth;
+
+	private static int screenHeight;
+
+	private static int boardWidth;
+
+	private static int boardHeight;
 	private boolean initialized;
 	private boolean playerAlive;
 	
@@ -233,22 +239,25 @@ public class GameBoard extends View
 		return eventHandled;
 	}
 
+
+		
+
 	public int getScreenWidth()
 	{
 		return screenWidth;
 	}
 	
-	public int getScreenHeight()
+	public  int getScreenHeight()
 	{
 		return screenHeight;
 	}
 	
-	public int getBoardWidth()
+	public static int getBoardWidth()
 	{
 		return boardWidth;
 	}
 	
-	public int getBoardHeight()
+	public static int getBoardHeight()
 	{
 		return boardHeight;
 	}
