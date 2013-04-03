@@ -2,6 +2,9 @@ package com.hungry_bubbles;
 
 import java.util.Random;
 
+import android.os.Handler;
+import android.util.Log;
+
 
 /**
  * Factory class for the creation of new BubbleThreads with random bubble
@@ -19,14 +22,20 @@ public class BubbleFactory
 	private static final int TOP_ANGLE_OF_MOTION = 270;
 	private static final int BOTTOM_ANGLE_OF_MOTION = 90;;
 	
+	// TODO: Only use one of these
 	private NonBlockingReadQueue<UpdateRequest> updatesQueue;
+	private Handler messageHandler;
+	
 	private int screenHeight, screenWidth, virtualPadding;
 	private Random random;
 	
-	public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests, 
-		int screenHeight , int screenWidth, int virtualPadding)	
+	//public BubbleFactory(NonBlockingReadQueue<UpdateRequest> updateRequests, 
+		//int screenHeight , int screenWidth, int virtualPadding)	
+	public BubbleFactory(Handler messageHandler, 
+			int screenHeight , int screenWidth, int virtualPadding)	
 	{
-		this.updatesQueue = updateRequests;
+		//this.updatesQueue = updateRequests;
+		this.messageHandler = messageHandler;
 		this.screenHeight = screenHeight;
 		this.screenWidth = screenWidth;
 		this.virtualPadding = virtualPadding;
@@ -34,19 +43,21 @@ public class BubbleFactory
 		random = new Random(); 
 	}
 	
-	public void startNewBubble(int color)
+	public UpdateRequest makeNewBubble(int color)
 	{
 		SIDE side = pickRandomSide();
 		BubbleData bubbleData = initRandomBubble(side, color);
 		
 		int angleOfMotion = getAngleOfMotionFromSide(side);
 		
+		// TODO: Uncomment or remove
+		//BubbleThread bubbleThread = new BubbleThread(updatesQueue, bubbleData, 
+			//angleOfMotion, screenWidth, screenHeight, virtualPadding); 
+
+		BubbleThread bubbleThread = new BubbleThread(messageHandler, bubbleData, 
+				angleOfMotion, screenWidth, screenHeight, virtualPadding); 
 		
-		BubbleThread bubbleThread = new BubbleThread(updatesQueue, bubbleData, 
-			angleOfMotion, screenWidth, screenHeight, virtualPadding); 
-		
-		Thread bubbleRunner = new Thread(bubbleThread);
-		bubbleRunner.start();
+		return new UpdateRequest(bubbleThread, bubbleData);
 		
 		/* TODO: Remove
 		 int Max = AppInfo.MAX_RADIUS;
@@ -101,8 +112,6 @@ public class BubbleFactory
 	 */
 	private BubbleData initRandomBubble(SIDE side, int color)
 	{
-		BubbleData bubbleData;
-		
 		// Generate a random starting radius from AppInfo.MIN_RADIUS to 
 		// AppInfo.MAX_RADIUS, with the call to random.nextInt() returning a
 		// pseudo-random integer from 0 (inclusive to 

@@ -1,5 +1,7 @@
 package com.hungry_bubbles;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 /**
@@ -10,19 +12,22 @@ import android.util.Log;
 public class BubbleThread extends Thread
 {
 	// How far the bubble will be moved at a time
-	private static final int MOVE_INCREMENT = 5;
+	private static final int MOVE_INCREMENT = 20;
 	
 	// How long the thread should sleep for between bubble position updates
 	// in milliseconds
-	private static final int SLEEP_TIME = 500;
+	private static final int SLEEP_TIME = 200;
 	
 	// "Tag" used for logging information and events within this class, such as
 	// the absence if invalid constructor arguments are provided 
 	private static final String TAG = "updatesQueue";
 	
+	// TODO: Only use one: queue or handler
 	// Shared data structure used to submit position update requests which will
 	// then be read by the GameBoard and rendered
-	NonBlockingReadQueue<UpdateRequest> updatesQueue;
+	//private NonBlockingReadQueue<UpdateRequest> updatesQueue;
+	
+	private Handler messageHandler;
 	
 	// TODO: Uncomment or remove
 	//private BlockingQueue<UpdateRequest> updatesQueue;
@@ -39,16 +44,24 @@ public class BubbleThread extends Thread
 		BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
 		int screenHeight)
 	*/
+	
+	/*
 	public BubbleThread(NonBlockingReadQueue<UpdateRequest> updatesQueue, 
 		BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
 		int screenHeight, int virtualPadding)
+		*/
+	public BubbleThread(Handler messageHandler, 
+			BubbleData startingData, int initialAngleOfMotion, int screenWidth, 
+			int screenHeight, int virtualPadding)
 		throws IllegalArgumentException
 	{
-		GameUtils.throwIfNull(TAG, "updatesQueue", updatesQueue);
+		//GameUtils.throwIfNull(TAG, "updatesQueue", updatesQueue);
+		GameUtils.throwIfNull(TAG, "messageHandler", messageHandler);
 		GameUtils.throwIfNull(TAG, "startingData", startingData);
 		GameUtils.throwIfInvalidAngle(TAG, "initialAngleOfMotion", initialAngleOfMotion);
 		
-		this.updatesQueue = updatesQueue;
+		//this.updatesQueue = updatesQueue;
+		this.messageHandler = messageHandler;
 		this.bubbleData = startingData;
 		this.angleOfMotion = initialAngleOfMotion;
 		this.screenWidth = screenWidth;
@@ -89,14 +102,21 @@ public class BubbleThread extends Thread
 				newPosition = BubbleData.move(bubbleData, angleOfMotion, MOVE_INCREMENT);
 			}
 			
-			updatesQueue.put(new UpdateRequest(this, newPosition));
+			this.bubbleData = newPosition;
+			
+			// TODO
+			//updatesQueue.put(new UpdateRequest(this, newPosition));
+			
+			Message updateMessage = new Message();
+			updateMessage.obj = new UpdateRequest(this, newPosition);
+			messageHandler.sendMessage(updateMessage);
 			
 			try
 			{
 				sleep(SLEEP_TIME);
 			} catch (InterruptedException e)
 			{
-				Log.d(TAG, "InterruptedException occurred in BubbleThread.run()");
+				Log.e(TAG, "InterruptedException occurred in BubbleThread.run()");
 				e.printStackTrace();
 			}
 		}
@@ -114,7 +134,7 @@ public class BubbleThread extends Thread
 		float y = position.getY();
 		int radius = position.getRadius();
 		
-		return ((x - radius < 0) || (x + radius > screenWidth + (2 * virtualPadding)) ||
+		return !((x - radius < 0) || (x + radius > screenWidth + (2 * virtualPadding)) ||
 				(y - radius < 0) || (y + radius) > screenHeight + (2 * virtualPadding));
 	}
 

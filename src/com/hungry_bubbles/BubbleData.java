@@ -1,5 +1,7 @@
 package com.hungry_bubbles;
 
+import android.util.Log;
+
 /**
  * Thread-safe representation of a "bubble" in the game which uses immutable
  * state to allow for safe sharing of BubbleData object among different 
@@ -114,8 +116,17 @@ public class BubbleData
 		double cosine = Math.cos(Math.toRadians(angleOfMotion));
 		
 		// Note that the hypotenuse is equal to the distance parameter
-		int changeInX = (int) (cosine * distance);
-		int changeInY = (int) (sine * distance);
+		float changeInX = (float) (cosine * distance);
+		float changeInY = (float) (sine * distance);
+		
+		// TODO: Remove
+		/*
+		Log.d("temp", "Moved bubble from (" + bubble.getX() + ", " + 
+			bubble.getY() + ") to (" + (bubble.getX() + changeInX) + ", " +
+			(bubble.getY() + changeInY) + ") at an agle of " + angleOfMotion +
+			" and distance of " + distance);
+			*/
+		//
 		
 		return updatePosition(bubble, bubble.getX() + changeInX, bubble.getY() + changeInY);
 	}

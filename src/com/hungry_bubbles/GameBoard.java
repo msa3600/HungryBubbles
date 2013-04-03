@@ -10,6 +10,8 @@ import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -44,6 +46,7 @@ public class GameBoard extends View
 	private HungryBubblesActivity hostActivity;
 	private BubbleData playerData;
 	private Map<BubbleThread, BubbleData> opponentData;
+	private int numOpponents;
 	
 	// Responsible for continuously starting new opponent BubbleThreads 
 	// throughout the game
@@ -57,6 +60,8 @@ public class GameBoard extends View
 	//private BlockingQueue<UpdateRequest> updateRequests;
 	
 	private NonBlockingReadQueue<UpdateRequest> updateRequests;
+	
+	private Handler mHandler;
 	
 	private int screenWidth;
 	private int screenHeight;
@@ -98,6 +103,7 @@ public class GameBoard extends View
 		
 		bubbleFactory = null;
 		opponentData = new HashMap<BubbleThread, BubbleData>();
+		numOpponents = 0;
 		
 		// TODO: Remove this if NonBlockingReadQueue works
 		//
@@ -109,6 +115,27 @@ public class GameBoard extends View
 			//REQUEST_QUEUE_CAPACITY, true);
 		
 		updateRequests = new NonBlockingReadQueue<UpdateRequest>();
+		
+		// TODO: Remove if this does not work
+		mHandler = new Handler()
+		{
+			public void handleMessage(Message msg)
+			{
+				// TODO: Remove
+				/*
+				UpdateRequest messageData = (UpdateRequest) msg.obj;
+				BubbleData curPos = opponentData.get(messageData.getRequester());
+				BubbleData newPos = messageData.getNewPosition();
+				Log.d("temp", "Handling message: Update " + messageData.getRequester().getId() +
+					" from (" + curPos.getX() + ", " + curPos.getY() + ") to (" + newPos.getX() +
+					", " + newPos.getY() + ")");
+					*/
+				//
+				
+				handleUpdateRequest((UpdateRequest) msg.obj);
+				startBubbleIfAppropriate();
+			}
+		};
 		
 		initialized = false;
 		playerTouchActive = false;
@@ -124,6 +151,12 @@ public class GameBoard extends View
 	private void endGame()
 		throws IllegalStateException
     {
+		// Stop all active threads
+		for(BubbleThread thread: opponentData.keySet())
+		{
+			thread.stop();
+		}
+		
 		String message;
 		
 		if(playerAlive)
@@ -196,17 +229,21 @@ public class GameBoard extends View
 			playerData = new BubbleData(Color.BLACK, playerX, playerY,
 				AppInfo.PLAYER_STARTING_RADIUS);
 			
-			this.bubbleFactory = new BubbleFactory(updateRequests, 
-				screenHeight, screenWidth, AppInfo.MAX_RADIUS);
+			// TODO
+			//this.bubbleFactory = new BubbleFactory(updateRequests, 
+				//screenHeight, screenWidth, AppInfo.MAX_RADIUS);
+			this.bubbleFactory = new BubbleFactory(mHandler, 
+					screenHeight, screenWidth, AppInfo.MAX_RADIUS);
 			
 			initialized = true;
 			playerAlive = true;
 		}
 
-		applyUpdates();
+		// TODO: Uncomment or remove
+		//applyUpdates();
+		
 		resolveCollisions();
 		updateBubbleColors();
-		startBubbleIfAppropriate();
 		
 		if(!playerAlive)
 		{
@@ -217,6 +254,8 @@ public class GameBoard extends View
 			drawPlayer(canvas);
 			drawOppponents(canvas);
 		}
+		
+		startBubbleIfAppropriate();
 	}
 
 	/**
@@ -442,6 +481,10 @@ public class GameBoard extends View
 	 */
 	private void resolveCollisions()
     {
+		// TODO: Remove
+		Log.d("collision", "START RESOLUTION");
+		//
+		
 		List<BubbleThread> deadThreads = new ArrayList<BubbleThread>();
 		
 		for(BubbleThread bubbleThread: opponentData.keySet())
@@ -450,12 +493,22 @@ public class GameBoard extends View
 			
 			if(BubbleData.bubblesAreTouching(playerData, opponentPosition))
 			{
+				// TODO: Remove
+				Log.d("collision", "Player collision");
+				//
+				
 				// Note that the player wins in the case of ties
 				if(playerData.getRadius() >= opponentPosition.getRadius())
 				{
 					playerData = BubbleData.consume(playerData, 
 						opponentPosition);
 					deadThreads.add(bubbleThread);
+					numOpponents--;
+					
+					if(playerData.getRadius() >= AppInfo.PLAYER_TARGET_RADIUS)
+					{
+						endGame();
+					}
 				}
 				else
 				{
@@ -498,6 +551,10 @@ public class GameBoard extends View
 				BubbleData bubble2 = opponentData.get((BubbleThread) bubbleThreads[j]); 
 				if(BubbleData.bubblesAreTouching(bubble1, bubble2))
 				{
+					// TODO: Remove
+					Log.d("collision", "Opponent collision");
+					//
+					
 					// Note that the player wins in the case of ties
 					if(bubble1.getRadius() >= bubble2.getRadius())
 					{
@@ -513,6 +570,8 @@ public class GameBoard extends View
 						
 						deadThreadIndices.add(i);
 					}
+					
+					numOpponents--;
 				}
 				
 			}
@@ -528,6 +587,21 @@ public class GameBoard extends View
 		}
     }
 
+	private void handleUpdateRequest(UpdateRequest request)
+	{
+		if(!opponentData.containsKey(request.getRequester()))
+    	{
+    		// If the BubbleThread making the request for a UI update 
+    		// is not contained in the opponentData map then the bubble
+    		// controlled by that thread must have been eaten and this
+    		// UI update request should be skipped
+    		return;
+    	}
+    	
+    	opponentData.put(request.getRequester(), request.getNewPosition());
+    	invalidate();
+	}
+	
 	/**
 	 * Applies any pending updates to bubble positions, ignoring any positions 
 	 * which are currently locked. 
@@ -554,16 +628,7 @@ public class GameBoard extends View
 	        
 	        for(UpdateRequest request: updatesToApply)
 	        {
-	        	if(!opponentData.containsKey(request.getRequester()))
-	        	{
-	        		// If the BubbleThread making the request for a UI update 
-	        		// is not contained in the opponentData map then the bubble
-	        		// controlled by that thread must have been eaten and this
-	        		// UI update request should be skipped
-	        		continue;
-	        	}
-	        	
-	        	opponentData.put(request.getRequester(), request.getNewPosition());
+	        	handleUpdateRequest(request);
 	        }
 	        
         } 
@@ -610,9 +675,24 @@ public class GameBoard extends View
 	 */
 	private void startBubbleIfAppropriate()
 	{
-		if(opponentData.size() < AppInfo.MAX_BUBBLES)
+		// TODO: Clean up
+		//if(opponentData.size() < AppInfo.MAX_BUBBLES)
+		if(numOpponents < AppInfo.MAX_BUBBLES)
 		{
-			bubbleFactory.startNewBubble(BUBBLE_STARTING_COLOR);
+			UpdateRequest newBubbleInfo = 
+				bubbleFactory.makeNewBubble(BUBBLE_STARTING_COLOR);
+			
+			BubbleThread bubbleThread = newBubbleInfo.getRequester();
+			BubbleData bubbleData = newBubbleInfo.getNewPosition();
+			opponentData.put(bubbleThread, bubbleData);
+			numOpponents++;
+			
+			// TODO: Remove
+			Log.d("temp", "Starting bubble at (" + bubbleData.getX() + ", " + 
+				bubbleData.getY() + ")");
+			//
+
+			bubbleThread.start();
 		}
 	}
 	
@@ -666,6 +746,10 @@ public class GameBoard extends View
 	
 	private void drawBubble(Canvas canvas, BubbleData data)
 	{
+		// TODO: Remove
+		Log.d("temp", "Drawing bubble at " + data.getX() + ", " + data.getY());
+		//
+		
 		Paint circlePaint = new Paint();
 		circlePaint.setColor(data.getColor());
 		
