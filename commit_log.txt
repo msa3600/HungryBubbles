@@ -1,0 +1,295 @@
+commit 2af716a28fdf8c954a324e4dcfe476495d5f9552
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 21:16:35 2013 -0400
+
+    Update the design and user manual documents and PDFs
+
+commit d29d164827e593afd4b358d123e3f0ee24c5fbe2
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 14:45:42 2013 -0400
+
+    Fixed the trapped bubble issues (I was using AppInfo.MAX_RADIUS as the size of the padding around the screen when it should have been 2 * AppInfo.MAX_RADIUS in order to be able to hold a bubble with a radius of MAX_RADIUS units. Also cleaned out all remaining TODO's and added some more comments.
+
+commit 9aa10b75d8e55cdaa71468ffddb80c0f589435ee
+Merge: b45597c 05e3d04
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 09:58:04 2013 -0400
+
+    Fixed merge conflicts
+
+commit b45597cbd29122b4276a6d7e80fe65eba355f36a
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 09:57:22 2013 -0400
+
+    Fixed merge conflicts
+
+commit 4a4a46f651c1945fe09b2884983666447c1aa2fd
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 09:54:47 2013 -0400
+
+    player can now play through an entire game without the app crashing (or at least that is the case on my phone). There is still a bug with computer controlled bubbles getting stuck on the outside of the screen.
+
+commit 05e3d04a8de56d1e428c71d11c4b0aef578ee776
+Author: John O'Brien <jwo4383@rit.edu>
+Date:   Wed Apr 3 08:44:21 2013 -0400
+
+    Removed thread.stop()
+    
+    Removed thread.stop() from gameBoard semi solved endgame  crashes
+
+commit 7adf75063abbedf2631f212389e485f2709d4a66
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 07:47:08 2013 -0400
+
+    Made some more progress
+
+commit 710ebfe56f281465d14e90b39090dd9b4d868041
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 05:51:04 2013 -0400
+
+    Got opponent bubbles to show up on screen.
+
+commit 1e5bd7d796aab2ef1b650b4267a448d17cad30d8
+Merge: 5b7f88c 7946f39
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 02:06:14 2013 -0400
+
+    This should be the last merge conflict commit. Should...
+
+commit 5b7f88c10546a7ca62b54beb3dfd33904b3a000e
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 02:02:50 2013 -0400
+
+    Fixed more merge conflicts.
+
+commit fb8900ef50487e846fd17c834d71dd4a9f29632a
+Merge: 245ebd0 45773ad
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 01:58:59 2013 -0400
+
+    Finished fixing merge conflicts (I hope)
+
+commit 7946f398d05942679b2e43d37704c0608fec0882
+Author: John O'Brien <jwo4383@rit.edu>
+Date:   Wed Apr 3 01:57:04 2013 -0400
+
+    Minor error fixes
+
+commit 245ebd04e84b5ad220956c9ff6a4a71d1ac8b09f
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 01:53:22 2013 -0400
+
+    Fixed merge conflicts
+
+commit 953eea5a75a37dde0b3ceb6814a50ceb07af6323
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 01:51:16 2013 -0400
+
+    Fixed merge conflicts
+
+commit 11d38b6ec8a9ff1b87b42f6de2eab6e6443ec48a
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Apr 3 01:47:20 2013 -0400
+
+    Worked on tying all of the pieces together and added a game stats screen/activity. Right now the main thing that needs to be finished is the thread-driven bubble creation and movement in BubbleThread.
+
+commit 45773ad0f20a320a5e0c2878e65ff66ea10d6d2a
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Wed Apr 3 00:02:43 2013 -0400
+
+    added the missing files that I forgot to add last time.
+
+commit fa7b5536f734cd87dd4605c3fb1756f3d35d2a1f
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Tue Apr 2 23:58:40 2013 -0400
+
+    created the design document and renamed the user.doc.  Made sure the documents had pdf versions and doc versions to be edited by other team members.
+
+commit 5c60b848c605f1672aa09195cb68e38b1e2e7774
+Merge: 6bca6ab 4eacd3d
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Tue Apr 2 22:47:11 2013 -0400
+
+    Merge branch 'master' of https://github.com/msa3600/HungryBubbles
+
+commit 4eacd3da1eedd1d518105769219b4b2afd758db2
+Author: msa3600 <msa3600@g.rit.edu>
+Date:   Tue Apr 2 22:01:03 2013 -0400
+
+     Added how bubble should move as well as eaten method ,but eaten method isn't iimplemented yet
+
+commit ac6fd881e5b7bfeb0d076888c1c1da5599623f88
+Author: theard <TimHeard@hotmail.com>
+Date:   Tue Apr 2 21:41:59 2013 -0400
+
+    Merge branch 'master', remote-tracking branch 'origin'
+
+commit ac7bb17966872bba0914bc6a7621ceb4255ab7b5
+Author: John O'Brien <jwo4383@rit.edu>
+Date:   Tue Apr 2 20:23:41 2013 -0400
+
+    AppInfo finish
+
+commit b91964104cc3c44cdf1dff70fba3922f6886ec1e
+Author: msa3600 <msa3600@g.rit.edu>
+Date:   Tue Apr 2 17:54:07 2013 -0400
+
+     modefied FactoryBubble constructor
+
+commit a73afca91c4dfb8fa766221d9d106057997fc452
+Author: msa3600 <msa3600@g.rit.edu>
+Date:   Tue Apr 2 17:33:17 2013 -0400
+
+     Saved appinfo infromation in bubble factory
+
+commit d0b896794bf4655134e44bae83a49ca00ae280cf
+Merge: 66a76c6 c7efcc9
+Author: Mustafa <msa3600@g.rit.edu>
+Date:   Tue Apr 2 17:27:01 2013 -0400
+
+    Fixed merge conflicts
+
+commit 6bca6ab866111ec4b838c678ea0698f29f616076
+Merge: d11b854 c7efcc9
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Tue Apr 2 13:11:13 2013 -0400
+
+    Merge branch 'master' of https://github.com/msa3600/HungryBubbles
+
+commit 66a76c6c2da6a45a9c752da8f7a9610b164200ad
+Author: Mustafa <msa3600@g.rit.edu>
+Date:   Tue Apr 2 11:18:02 2013 -0400
+
+     Added unfinished methods for BubbleFactory and BubbleThread
+
+commit c7efcc9913137572674c4a0f665cc7c070faced7
+Author: theard <TimHeard@hotmail.com>
+Date:   Tue Apr 2 03:00:39 2013 -0400
+
+    Finished setting up UI interaction and fixed the finger motion tracking so that the user's finger will not 'slip' off the bubble while they are moving it with their finger. Also merged the GameView and GameBoard classes to increase cohesion and removed the GameRenderer interface.
+
+commit ddb452eabe939df8a23d154db37d580d6ea43e5e
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Sat Mar 30 02:10:47 2013 -0500
+
+    Finished implementing what I could individually.
+
+commit 1e0e2bf99a4e6d1a2053613cf35ef6f9c5e4a098
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Sat Mar 30 01:28:17 2013 -0500
+
+    Finished setting up game logic and implemented a theoretically thread-safe queue for managing giving position update requests to the GameBoard controller class
+
+commit 299e7e5976e85433b358bcc7c115df54ebe0cf3c
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Fri Mar 29 17:27:29 2013 -0500
+
+    Fixed small error (forgot the new keyword in the GameBoard constructor) in my previous commit.
+
+commit b366a5c9fbf0671354eea3a54d8d07e042f8d410
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Fri Mar 29 17:25:55 2013 -0500
+
+    Added a default constructor to BubbleFactory
+
+commit 8fcf26409439b992b66c079457e5d06792c008d6
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Fri Mar 29 17:23:42 2013 -0500
+
+    Fixed code so that the player's piece actually follows the player's finger again.
+
+commit a7869dcc1ade0e49be4d5ac0114d6e4e267327e5
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Fri Mar 29 14:59:54 2013 -0500
+
+    Continued working on getting the GameBoard class set up and functioning.
+
+commit f10d44ab62bde2cd9bbbf3e5c5d6a6ca03c0acde
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Fri Mar 29 14:22:03 2013 -0500
+
+    Worked on restructuring and updating code to fit with the architecture which was agreed upon during the first team meeting
+
+commit d11b854a34faffb6bca22d9e0b4a1abfc0d5c94d
+Merge: d2f1c34 fa8ee22
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Thu Mar 28 19:33:57 2013 -0400
+
+    Merge branch 'master' of https://github.com/msa3600/HungryBubbles
+    
+    Conflicts:
+    	.gitignore
+
+commit d2f1c345cfc5f876938f218443e5c80cd07ec4d3
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Thu Mar 28 19:29:38 2013 -0400
+
+    added the .settings/* to gitignore for eclipse settings to be ignored
+
+commit fa8ee229ce67d7d055167c75d1363a6c3829956f
+Author: Shaun DeVos <mk7upurz87@gmail.com>
+Date:   Thu Mar 28 20:26:28 2013 -0300
+
+    Update .gitignore
+    
+    ignore eclipse settings
+
+commit 5ac13c3b506e227ce810f9e4ad00c1dfc6a942a2
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Thu Mar 28 19:21:24 2013 -0500
+
+    Made changes to names and added classes based on decisions made in the initial team meeting (forgot to add some files before)
+
+commit 1f04da3b22cc228b50df875ae77953491911de24
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Thu Mar 28 19:20:27 2013 -0500
+
+    Made changes to names and added classes based on decisions made in the initial team meeting
+
+commit fbef3a6ff01d8223ca3ec2312324720f5930841a
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Thu Mar 28 16:06:39 2013 -0500
+
+    Actually added the BubbleData class as well as an empty BubbleThread class.
+
+commit da4ece8ed1f8c9d7b7173e5707829cb54155e113
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Thu Mar 28 16:05:28 2013 -0500
+
+    Created a BubbleData class with immutable state to represent the current state of a bubble in the game.
+
+commit 8bc92a2f819686990007c157c99b27666fe12ebc
+Author: Tim Heard <tjh2430@rit.edu>
+Date:   Thu Mar 28 12:05:46 2013 -0500
+
+    Removed a TODO from StartActivity.java
+
+commit 64827968f8f29f07258c4f16c593ae3ee44a34de
+Author: theard <TimHeard@hotmail.com>
+Date:   Thu Mar 28 05:39:23 2013 -0400
+
+    Updated the start screen layout
+
+commit f97c53e4359cbaed52f35f539ea5afc275739be1
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Mar 27 17:38:26 2013 -0400
+
+    Added .gitignore file to prevent files from the gen/ and bin/ folders from ending up in the repo
+
+commit a069792cd13adcb800b7edf7a25e7ec3a85e114c
+Author: theard <TimHeard@hotmail.com>
+Date:   Wed Mar 27 17:28:09 2013 -0400
+
+    Initial commit of pre-existing code base
+
+commit fe29f2beb111f4ce1345b661e868bd236303240b
+Author: Mustafa <msa3600@g.rit.edu>
+Date:   Wed Mar 27 14:48:25 2013 -0400
+
+    remove test.txt
+
+commit af49c7e7284ab597c031f5dcad69fd6a04a05173
+Author: Mustafa <msa3600@g.rit.edu>
+Date:   Wed Mar 27 14:36:40 2013 -0400
+
+     First commit
